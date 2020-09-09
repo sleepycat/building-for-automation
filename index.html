@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Building for automation</title>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="user-scalable=no,initial-scale=1,maximum-scale=1,minimum-scale=1,width=device-width"
+    />
+    <link rel="stylesheet" type="text/css" href="./css/typo.css" />
+    <link rel="stylesheet" type="text/css" href="./css/nord-dark.css" />
+    <link rel="stylesheet" type="text/css" href="./css/font-nord.css" />
+    <link rel="stylesheet" type="text/css" href="./css/bg-nord.css" />
+    <link rel="stylesheet" type="text/css" href="./css/style.css" />
+  </head>
+  <body>
+    <textarea id="source">
+
+
+class: nord-dark, center, middle, title
+
+.logo[🤖]
+# Building for automation
+
+---
+
+class: nord-dark, left, middle
+
+## HTTPS-everywhere
+
+.eighty[![https-everywhere](images/https-everywhere.png)]
+
+---
+
+class: nord-dark, left, middle
+
+## Tracker
+
+.eighty[![tracker](images/tracker.png)]
+
+---
+
+class: nord-dark, middle, left
+
+## What Tracker does: Makes things visible
+
+* Gathers data needed for a metric
+* Does it over time
+
+---
+class: nord-dark, middle, left
+
+## Answering narrow questions is easy
+* TLS settings are derived from making connections to public services
+* Email settings are derived from DMARC summary reports
+
+---
+
+class: nord-dark, middle, left
+
+## The bigger question: "Is the system secure*?"
+
+---
+
+class: nord-dark, middle, left
+
+### Security is the sum of many decisions at multiple layers
+
+* Platform/Infrastructure settings
+* Languages
+* Dependencies
+* Workflow (who, and how)
+* Inputs & validation
+* Application code
+
+---
+
+class: nord-dark, middle, center
+
+## Building to answer "Is the system secure*?"
+# 🤔
+
+---
+
+class: nord-dark, center, middle
+
+## What data would support such analysis?
+# 🤔
+
+* Platform/Infrastructure settings: Kubernetes, Config Connector
+* Languages: GitHub API
+* Dependencies: GitHub API
+* Workflow (who, and how): GitHub API
+* Inputs & validation: GraphQL
+* Application code: ? (CodeQL?)
+
+---
+
+class: nord-dark, center, middle
+
+## Platform/Infrastructure settings
+
+---
+
+class: nord-dark, left, middle
+
+## What ports *should* be open?
+
+```bash
+$ git clone --depth 1 git@github.com:canada-ca/tracker.git && cd tracker
+$ kustomize build platform/overlays/gke |  yq . | \
+>   jq 'select(.kind == "Service" and .spec.type == "LoadBalancer").spec.ports[].port'
+
+80
+443
+```
+
+---
+
+class: nord-dark, left, middle
+
+## What ports *are* open?
+
+```bash
+$ sudo nmap -p- --reason pulse.alpha.canada.ca
+[sudo] password for mike:
+Starting Nmap 7.80 ( https://nmap.org ) at 2020-09-05 13:52 EDT
+Nmap scan report for pulse.alpha.canada.ca (34.95.5.243)
+Host is up, received syn-ack ttl 56 (0.046s latency).
+rDNS record for 34.95.5.243: 243.5.95.34.bc.googleusercontent.com
+Not shown: 65533 filtered ports
+Reason: 65533 no-responses
+PORT    STATE SERVICE REASON
+* 80/tcp  open  http    syn-ack ttl 56 👀
+* 443/tcp open  https   syn-ack ttl 56
+
+Nmap done: 1 IP address (1 host up) scanned in 191.39 seconds
+```
+
+---
+class: nord-dark, middle, left
+
+## WIP: How about the infrastructure?
+
+---
+class: nord-dark, middle, left
+
+## Google Config Connector: Infrastructure as Data
+
+```yaml
+# Our GKE cluster
+apiVersion: container.cnrm.cloud.google.com/v1beta1
+kind: ContainerCluster
+metadata:
+  annotations:
+    cnrm.cloud.google.com/remove-default-node-pool: "false"
+  name: tracker-two-dot-oh
+  namespace: tracker-test
+spec:
+  # Place this cluster in Montreal for data residency
+  # https://cloud.google.com/about/locations/montreal
+  location: northamerica-northeast1 👀
+  initialNodeCount: 1
+  # Logs are centralized by default in Stackdriver
+  # Our least privilege account gives nodes permission to write to these
+  # logging and monitoring services
+  loggingService: logging.googleapis.com/kubernetes
+  monitoringService: monitoring.googleapis.com/kubernetes
+  masterAuth:
+    # No credentials here since nobody should log into master nodes
+    clientCertificateConfig:
+      issueClientCertificate: false
+  # Secrets are not currently encrypted within etcd
+  # databaseEncryption:
+  #   keyName: string
+  #   state: string
+  addonsConfig:
+    # Enable "Cloud Run for Anthos"
+    # We use this feature for the domain scanning
+    cloudrunConfig:
+      disabled: false
+  # Enable Workload Identity
+  workloadIdentityConfig:
+    identityNamespace: "track-compliance.svc.id.goog"
+  enableShieldedNodes: true
+  # Subscribe to a release channel so Kubernetes is auto-upgraded for us
+  releaseChannel: # immutable field
+    channel: REGULAR # RAPID, REGULAR, or STABLE
+  nodeConfig:
+    diskSizeGb: 100
+    # Node auto-upgrades are enabled by default
+    imageType: COS_CONTAINERD
+    machineType: n1-standard-4
+    diskType: pd-standard
+    shieldedInstanceConfig: # immutable fields
+      enableIntegrityMonitoring: true
+      enableSecureBoot: true
+    serviceAccountRef:
+      # Nodes should use our least privilege account
+      external: gke-least-privilege-account@track-compliance.iam.gserviceaccount.com
+---
+```
+
+---
+
+class: nord-dark, middle, left
+
+## Data residency? Accounts?
+
+```bash
+$ yq . tracker-infrastructure.yaml | jq 'select(.kind == "ContainerCluster").spec.location'
+"northamerica-northeast1"
+
+$ yq . tracker-infrastructure.yaml | jq 'select(.kind == "IAMServiceAccount")'
+{
+  "apiVersion": "iam.cnrm.cloud.google.com/v1beta1",
+  "kind": "IAMServiceAccount",
+  "metadata": {
+    "name": "gke-least-privilege-account",
+    "namespace": "tracker-test"
+  },
+  "spec": {
+    "displayName": "least privilege GKE service account"
+  }
+}
+```
+
+---
+
+class: nord-dark, middle, left
+
+# We can ask/answer this questions programmatically because:
+
+* Application platform (everything to run the app) is data
+* Infrastructure (network, compute, accounts, etc) is data
+* Data is on GitHub: No special access needed
+
+---
+
+class: nord-dark, middle, left
+
+# GitHub API
+
+---
+
+class: nord-dark, middle, left
+
+# Languages
+
+---
+
+class: nord-dark, middle, left
+
+## What programming languages are used?
+
+```graphql
+{
+  repository(owner: "canada-ca" name: "tracker") {
+    nameWithOwner
+    languages(first: 3) {
+      edges {
+        node {
+          name
+        }
+      }
+    }
+  }
+}
+
+```
+---
+
+class: nord-dark, middle, left
+
+```json
+{
+  "data": {
+    "repository": {
+      "nameWithOwner": "canada-ca/tracker",
+      "languages": {
+        "edges": [
+          {
+            "node": {
+              "name": "Dockerfile"
+            }
+          },
+          {
+            "node": {
+              "name": "Python"
+            }
+          },
+          {
+            "node": {
+              "name": "JavaScript"
+            }
+          }
+        ]
+      }
+    }
+  }
+}
+```
+---
+class: nord-dark, middle, left
+
+## Dependencies
+
+---
+
+class: nord-dark, middle, left
+
+## GitHub API v4 preview
+
+```graphql
+{
+  repository(owner: "canada-ca", name: "tracker") {
+    dependencyGraphManifests(first: 1) {
+      edges {
+        node {
+          filename
+          dependenciesCount
+          dependencies(first: 5) {
+            nodes {
+              packageName
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+```
+---
+
+class: nord-dark, middle, left
+
+```json
+{
+  "data": {
+    "repository": {
+      "dependencyGraphManifests": {
+        "edges": [
+          {
+            "node": {
+              "filename": "api/Pipfile",
+              "dependenciesCount": 23,
+              "dependencies": {
+                "nodes": [
+                  {
+                    "packageName": "bcrypt"
+                  },
+                  {
+                    "packageName": "flask"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}
+```
+
+---
+
+## Bonus: Are there any known vulnerabilities in this project?
+
+```graphql
+{
+  repository(owner: "canada-ca" name: "tracker") {
+    vulnerabilityAlerts(first: 5)  {
+      edges {
+        node {
+          securityVulnerability {
+            severity
+            advisory {
+              description
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+---
+
+class: nord-dark, middle, left
+
+```json
+{
+  "data": {
+    "repository": {
+      "vulnerabilityAlerts": {
+        "edges": []
+      }
+    }
+  }
+}
+```
+
+---
+
+class: nord-dark, middle, left
+
+# Inputs & validation: GraphQL
+
+---
+
+class: nord-dark, left, middle,
+
+### A GraphQL endpoint can describe the data it exposes and inputs it accepts.
+
+```graphql
+{
+  __schema {
+    queryType {
+      fields {
+        name
+      }
+    }
+  }
+}
+```
+
+---
+
+<iframe src="https://apis.guru/graphql-voyager/"><iframe>
+
+---
+
+class: nord-dark, left, middle
+
+## Introspection powered API audits for string inputs!
+
+```bash
+$ npx graphql-attack-surface https://swapi.graph.cool
+npx: installed 138 in 13.706s
+
+createFilm accepts the following string inputs:
+  director accepts a value of String
+  openingCrawl accepts a value of String
+  producers accepts a value of [String!]
+  title accepts a value of String!
+```
+
+---
+
+## Introspection powered API audits for string inputs!
+
+```bash
+$ npx graphql-attack-surface "https://pulse.alpha.canada.ca/graphql"
+
+findDomainsByOrg accepts the following string inputs:
+  before accepts a value of String
+  after accepts a value of String
+
+...
+
+authenticateTwoFactor accepts the following string inputs:
+  otpCode accepts a value of String!
+```
+
+---
+
+class: nord-dark, middle, left
+
+## Are we able to trace our images back to commits?
+
+---
+
+class: nord-dark, middle, left
+
+## Are we able to trace our images back to commits?
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tracker-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tracker-frontend
+  template:
+    metadata:
+      labels:
+        app: tracker-frontend
+    spec:
+      containers:
+*      - image: gcr.io/track-compliance/frontend:master-2bea7ec
+        name: frontend
+        ports:
+        - containerPort: 3000
+
+```
+
+---
+
+class: nord-dark, middle, left
+
+## Are we doing code review?
+
+```graphql
+{
+  repository(owner: "canada-ca", name: "tracker") {
+    object(expression: "2bea7ec") {
+      ... on Commit {
+        message
+        author {
+          date
+          email
+          name
+        }
+      }
+    }
+  }
+}
+
+```
+
+---
+
+class: nord-dark, middle, left
+
+```json
+{
+  "data": {
+    "repository": {
+      "object": {
+        "message": "Add padding to SignInPage (#743)\n\nThis commit simply adds some padding to the SignInPage so that the imputs\r\naren't slammed up against the sides of the screen on mobile devices.",
+        "author": {
+          "date": "2020-08-05T14:10:11.000-04:00",
+          "email": "mike@korora.ca",
+          "name": "Mike Williamson"
+        }
+      }
+    }
+  }
+}
+```
+---
+class: nord-dark, middle, left
+
+# Workflow
+
+---
+
+class: nord-dark, middle, left
+
+# Are we doing code review?
+
+```graphql
+{
+  repository(owner: "canada-ca", name: "tracker") {
+    nameWithOwner
+    pullRequests(last: 5 states: MERGED) {
+      nodes {
+        author {
+          login
+        }
+        reviews(last: 1) {
+          edges {
+            node {
+              author {
+                login
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+---
+
+class: nord-dark, middle, left
+
+```json
+{
+  "data": {
+    "repository": {
+      "nameWithOwner": "canada-ca/tracker",
+      "pullRequests": {
+        "nodes": [
+          {
+            "author": {
+              "login": "FestiveKyle"
+            },
+            "reviews": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "sleepycat"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "author": {
+              "login": "sleepycat"
+            },
+            "reviews": {
+              "edges": []
+            }
+          },
+        ]
+      }
+    }
+  }
+}
+```
+---
+
+class: nord-dark, middle, left
+
+## Are branch protections being used?
+
+```graphql
+{
+  repository(owner: "canada-ca", name: "tracker") {
+    nameWithOwner
+    branchProtectionRules(first: 5) {
+      edges {
+        node {
+          id
+        }
+      }
+    }
+  }
+}
+
+```
+---
+
+class: nord-dark, middle, left
+
+```json
+{
+  "data": {
+    "repository": {
+      "nameWithOwner": "canada-ca/tracker",
+      "branchProtectionRules": {
+        "edges": []
+      }
+    }
+  }
+}
+```
+---
+
+class: nord-dark, middle, left
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: helloworld
+  name: helloworld
+spec:
+  ports:
+  - name: 80-3000
+    port: 80
+    protocol: TCP
+    targetPort: 3000
+  selector:
+    app: helloworld
+  type: LoadBalancer
+status:
+  loadBalancer: {}
+```
+---
+
+class: nord-dark, left, middle
+
+## Security has a problem.
+
+* Dev: 🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈
+* Ops: 🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈
+* Sec: 🐈
+
+---
+
+class: nord-dark, middle, left
+
+#### Directive on Service and Digital
+##### Mandatory Procedures for Enterprise Architecture Assessment
+
+### A.2.3.10.4 Run applications in containers
+
+---
+
+class: nord-dark, middle, left
+
+#### Directive on Service and Digital
+##### Mandatory Procedures for Enterprise Architecture Assessment
+
+
+### A.2.3.12.4 Use distributed architectures
+
+---
+
+class: nord-dark, middle, left
+
+```yaml
+apiversion: apps/v1
+kind: deployment
+metadata:
+  labels:
+    app: helloworld
+  name: helloworld
+spec:
+  replicas: 1
+  selector:
+    matchlabels:
+      app: helloworld
+  template:
+    metadata:
+      labels:
+        app: helloworld
+    spec:
+      containers:
+      - image: mikewilliamson/helloworld
+        name: helloworld
+```
+
+---
+
+class: nord-dark, middle, left
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: helloworld
+  name: helloworld
+spec:
+  ports:
+  - name: 80-3000
+    port: 80
+    protocol: TCP
+    targetPort: 3000
+  selector:
+    app: helloworld
+  type: LoadBalancer
+status:
+  loadBalancer: {}
+```
+---
+
+
+class: nord-dark, center, middle, terminal
+
+## Security implications
+
+![](images/kiali-e2e.gif)
+
+---
+class: nord-dark, middle, left
+
+>Let’s Encrypt offers only domain validation, since only DV can be completely automated and the security benefits of OV and EV are unclear.
+
+<cite>Aas, Josh, et al. "Let's Encrypt: An Automated Certificate Authority to Encrypt the Entire Web." Proceedings of the 2019 ACM SIGSAC Conference on Computer and Communications Security. 2019.</cite>
+
+---
+
+
+class: nord-dark, center, middle
+
+## Government isn't forms. It's services.
+
+---
+
+class: nord-dark, left, middle
+
+## There are patterns in the work of service delivery
+
+* researching
+* designing
+* building
+* deploying
+* running
+* testing
+* updating
+* monitoring
+* auditing
+* vulnerability scanning
+* patching
+* recovering
+* validating
+* authenticating
+
+---
+
+class: nord-dark, left, middle
+
+## Infrastructure As Data
+
+> “Infrastructure As Data” — describing what your systems look like in simple machine­-readable data formats. Have programs execute those data formats and ensure your infrastructure matches.
+
+<cite>Michael DeHaan - O'Reilly Radar, 2013</cite>
+
+---
+
+class: nord-dark, center, middle
+
+## Automation: Building applications for repetitive work
+
+
+* The work of
+building,
+running,
+testing,
+deploying,
+updating,
+monitoring,
+auditing
+vulnerability scanning,
+patching,
+snapshotting,
+---
+class: nord-dark, center, middle
+
+## Back in 1995:
+
+---
+
+class: nord-dark, left, middle
+
+## Is Netscape 2.0 a platform or an application?
+
+> It's a little of both. It's an application in that it runs on top of what is traditionally thought of as an operating system - like Windows or Unix - but it's a platform in that people can build applications on it.
+
+<cite>Bayers, C. "Why Bill Gates Wants to Be the Next Marc Andreessen", Wired Magazine (1995).</cite>
+
+---
+
+class: nord-dark, left, middle
+
+## What lets us build on it?
+
+* Browsers turn documents into data
+* Browsers turn user interactions (mouseover) into data
+* Browsers mediate sending/receiving data to device sensors
+* Browsers offer interfaces that allow access to this data
+
+---
+
+class: nord-dark, left, middle
+
+## Platform
+
+> A boundary layer presenting an interface that makes technically/organizationally/economically difficult to capture data/events happening on one side more easily consumable on the other.
+
+<cite>Me. This slide. Now.</cite>
+
+---
+
+
+class: nord-dark, left, middle,
+
+## Security automation with GraphQL introspection
+
+---
+
+class: nord-dark, left, middle
+
+* What domains are even out there?
+* Which department owns a domain?
+## Getting data to answer questions is hard...
+* Is this a government employee?
+* Which department is this user from?
+
+---
+
+class: nord-dark, left, middle
+
+## Platform
+
+> A platform abstracts away a messy problem so you can build on top of it.
+
+<cite>Sam Ghods -- CoFounder of Box</cite>
+
+---
+
+
+class: nord-dark, center, middle
+
+## Platform
+
+.fifty[![platform](images/platform.png)]
+
+---
+
+class: nord-dark, center, middle
+
+## API
+
+.fifty[![platform](images/platform.png)]
+
+---
+
+class: nord-dark, middle, left
+
+#### Directive on Service and Digital
+##### Mandatory Procedures on Application Programming Interfaces
+
+### B.2.2.4 Validate your API design by consuming it
+
+---
+class: nord-dark, left, middle
+
+## Applications:
+
+> All the applications that have ever been written, have been written to output data based on some input data.
+
+<cite>Fabian, R. "Data-Oriented Design" (2016).</cite>
+
+---
+
+class: nord-dark, middle, left
+
+## Domain settings
+
+```bash
+$ for v in ssl2 ssl3 tls1 tls1_1 tls1_2; do
+>  for c in $(openssl ciphers 'ALL:eNULL' | tr ':' ' '); do
+>  openssl s_client -connect pulse.alpha.canada.ca:443 \
+>  -cipher $c -$v < /dev/null > /dev/null 2>&1 && echo -e "$v:\t$c"
+>  done
+> done
+
+tls1_2:	ECDHE-RSA-AES256-GCM-SHA384
+tls1_2:	ECDHE-RSA-CHACHA20-POLY1305
+tls1_2:	ECDHE-RSA-AES128-GCM-SHA256
+```
+
+---
+
+---
+
+class: nord-dark, middle, left
+
+## TLS ciphers
+
+---
+
+class: nord-dark, middle, left
+
+## Minimum Viable TLS cipher scanner
+
+```bash
+$ for v in tls1 tls1_1 tls1_2 tls1_3; do
+>  for c in $(openssl ciphers 'ALL:eNULL' | tr ':' ' '); do
+>  openssl s_client -connect pulse.alpha.canada.ca:443 \
+>  -cipher $c -$v < /dev/null > /dev/null 2>&1 && echo "$v: $c"
+>  done
+> done
+
+tls1_2:	ECDHE-RSA-AES256-GCM-SHA384
+tls1_2:	ECDHE-RSA-CHACHA20-POLY1305
+tls1_2:	ECDHE-RSA-AES128-GCM-SHA256
+...
+```
+
+---
+
+class: nord-dark, center, middle
+
+## Aggregates
+
+.eighty[![tracker](images/loops.png)]
+
+---
+
+class: nord-dark, middle, left
+
+## Trends
+
+.eighty[![tracker](images/loops-over-time.png)]
+
+---
+
+
+
+class: nord-dark, middle, left
+
+## Creating a list of supported ciphers
+* 4 protocol versions
+* 163 ciphers
+* 652 connections
+
+---
+
+
+class: nord-dark, center, middle
+
+## Platform
+
+.fifty[![platform](images/platform.png)]
+
+---
+
+class: nord-dark, middle, left
+
+# More automation, needs more data
+
+---
+class: nord-dark, middle, left
+
+## Gather data on the metric you want to move: TLS ciphers
+
+---
+
+class: nord-dark, middle, left
+
+## TLS wasn't designed to be "observable"
+
+* Servers don't tell you what they support
+* Servers choose from the ciphers the client offers
+
+---
+
+
+
+
+class: nord-dark, middle, center
+
+## Fin
+
+
+
+    </textarea>
+
+    <script src="js/remark.min.js"></script>
+    <script>
+      var slideshow = remark.create({
+        ratio: "16:9", // window ratio
+        // arta, ascetic, dark, default, far, github, googlecode, idea,
+        // ir-black, magula, monokai, rainbow, solarized-dark, solarized-light,
+        // sunburst, tomorrow, tomorrow-night-blue, tomorrow-night-bright,
+        // tomorrow-night, tomorrow-night-eighties, vs, zenburn.
+        highlightStyle: "dark",
+        highlightLines: true,
+        countIncrementalSlides: false, // whether the incremental content count as one page
+        //slideNumberFormat: "", // If this parameter is set to "", the page number is not displayed
+        navigation: {
+          scroll: false, // Page turning with mouse wheel is allowed
+          touch: true, // Is it allowed to scroll back and forth by clicking on the left or right side of the screen
+          click: false // Allow the mouse to click on the left or right side of the screen to turn back and forth
+        }
+      });
+
+    </script>
+  </body>
+</html>
