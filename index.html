@@ -32,6 +32,11 @@ class: nord-dark, left, middle
 .eighty[![https-everywhere](images/https-everywhere.png)]
 
 ---
+class: nord-dark, left, middle
+
+.eighty[![dmarc](images/dmarc.png)]
+
+---
 
 class: nord-dark, left, middle
 
@@ -43,7 +48,7 @@ class: nord-dark, left, middle
 
 class: nord-dark, middle, left
 
-## Tracker: data to measure progress
+## Tracker's value: automated data gathering
 
 * Makes connections to public services, extracts TLS settings
 * Queries DNS to learn email security settings (DMARC)
@@ -53,10 +58,9 @@ class: nord-dark, middle, left
 
 class: nord-dark, middle, left
 
-## Questions Tracker's data answers
+## Tracker's data allows answering certain questions
 
-* Are TLS settings for a domain "good"?
-* Are email security settings (DMARC) for a domain "good"?
+* Are TLS/DMARC settings for a domain "good"?
 * Are this/that group of domains "good"?
 * Are this/that group of domains trending towards "good"?
 
@@ -64,19 +68,19 @@ class: nord-dark, middle, left
 
 class: nord-dark, middle, left
 
-## These are helpful questions to answer (but narrow).
+## Our data doesn't answer: Is the system secure*?
 
 ---
 
 class: nord-dark, middle, left
 
-## Tracker of the future: Is the system secure*?
+## Answering that would be valuable...
 
 ---
 
 class: nord-dark, middle, left
 
-### Security is the sum of many decisions at multiple layers
+## Security is the sum of decisions at multiple layers
 
 * Platform
 * Infrastructure
@@ -88,18 +92,9 @@ class: nord-dark, middle, left
 
 ---
 
-class: nord-dark, middle, left
-
-.face[🤔]
-## What data would support such analysis?
-
----
-
-
 class: nord-dark, left, middle
 
-.face[🤔]
-### Could we represent each layer as data?
+## Summing across layers requires layers as data
 
 * Platform
 * Infrastructure
@@ -123,8 +118,7 @@ class: nord-dark, left, middle
 
 class: nord-dark, left, middle
 
-.face[🤔]
-### How to represent each layer as data?
+## * as data: A tour
 
 * Platform: *Kubernetes*
 * Infrastructure: *Config Connector*
@@ -144,7 +138,7 @@ class: nord-dark, center, middle
 
 class: nord-dark, left, middle
 
-## Infrastructure As Data
+## Infrastructure As Data: the other part
 
 > ...describing what your systems look like in simple machine readable data formats. *Have programs execute those data formats and ensure your infrastructure matches*.
 
@@ -154,31 +148,9 @@ class: nord-dark, left, middle
 
 class: nord-dark, middle, center
 
-## Kubernetes ensures reality matches your config
+## Kubernetes: reality === config
 
 .sixty[![](images/kubernetes-sync.svg)]
----
-
-class: nord-dark, left, middle
-
-## What services are running on our platform?
-
-```bash
-$ git clone --depth 1 git@github.com:canada-ca/tracker.git && cd tracker
-$ kustomize build platform/overlays/gke |  yq . | jq 'select(.kind == "Service").metadata.name'
-"dns-scanner"
-"https-scanner"
-"result-processor"
-"ssl-scanner"
-"postgres"
-"tracker-api"
-"cert-manager"
-"cert-manager-webhook"
-"tracker-frontend"
-"istio-ingressgateway"
-...
-```
-
 ---
 
 class: nord-dark, left, middle
@@ -187,15 +159,14 @@ class: nord-dark, left, middle
 
 ```bash
 $ git clone --depth 1 git@github.com:canada-ca/tracker.git && cd tracker
-$ kustomize build platform/overlays/gke |  yq . | \
->   jq 'select(.kind == "Service" and .spec.type == "LoadBalancer").spec.ports[].port'
+$ kustomize build platform/overlays/gke | \
+>   yq 'select(.kind == "Service" and .spec.type == "LoadBalancer").spec.ports[].port'
 
 80
 443
 ```
 
 ---
-
 
 class: nord-dark, left, middle
 
@@ -218,6 +189,52 @@ Nmap done: 1 IP address (1 host up) scanned in 191.39 seconds
 ```
 
 ---
+
+class: nord-dark, left, middle
+
+## What services are running on our platform?
+
+```bash
+$ kustomize build platform/overlays/gke |  yq 'select(.kind == "Service").metadata.name'
+"dns-scanner"
+"https-scanner"
+"result-processor"
+"ssl-scanner"
+"postgres"
+"tracker-api"
+"cert-manager"
+"cert-manager-webhook"
+"tracker-frontend"
+"istio-ingressgateway"
+...
+```
+
+---
+
+class: nord-dark, left, middle
+
+## What versions are running?
+
+```bash
+$ kustomize build platform/overlays/gke | \
+  yq 'select(.kind == "Deployment").spec.template.spec.containers[].image'
+"gcr.io/track-compliance/api:master-fcb74ce"
+"quay.io/jetstack/cert-manager-controller:v0.15.1"
+"quay.io/jetstack/cert-manager-cainjector:v0.15.1"
+"quay.io/jetstack/cert-manager-webhook:v0.15.1"
+"gcr.io/track-compliance/frontend:master-096601c"
+"docker.io/istio/proxyv2:1.6.4"
+"docker.io/jaegertracing/all-in-one:1.16"
+"docker.io/istio/pilot:1.6.4"
+"quay.io/kiali/kiali:v1.18"
+"docker.io/prom/prometheus:v2.15.1"
+"docker.io/istio/proxyv2:1.6.4"
+"grafana/grafana:latest"
+"prom/prometheus:v2.12.0"
+```
+
+---
+
 
 class: nord-dark, middle, left
 
@@ -302,10 +319,10 @@ class: nord-dark, middle, left
 ## Data residency? Accounts?
 
 ```bash
-$ yq . tracker-infrastructure.yaml | jq 'select(.kind == "ContainerCluster").spec.location'
+$ $ cat tracker.yaml | yq 'select(.kind == "ContainerCluster").spec.location'
 "northamerica-northeast1"
 
-$ yq . tracker-infrastructure.yaml | jq 'select(.kind == "IAMServiceAccount")'
+$ cat tracker.yaml | yq 'select(.kind == "IAMServiceAccount")'
 {
   "apiVersion": "iam.cnrm.cloud.google.com/v1beta1",
   "kind": "IAMServiceAccount",
@@ -323,7 +340,7 @@ $ yq . tracker-infrastructure.yaml | jq 'select(.kind == "IAMServiceAccount")'
 
 class: nord-dark, middle, left
 
-# We can ask/answer this questions programmatically because:
+# We can ask/answer these questions programmatically because:
 
 * Application platform (everything to run the app) is data
 * Infrastructure (network, compute, accounts, etc) is data
@@ -336,6 +353,18 @@ class: nord-dark, middle, left
 # Languages as data: GitHub API
 
 ---
+
+class: nord-dark, middle, left
+
+# Languages matter for security
+* "Microsoft has deemed C++ no longer acceptable for writing mission-critical software."[1]
+* JavaScript has language level SQL injection prevention
+* Golang:	CVE-2019-14809 net/url authorization bypass
+* Rust 😍
+
+<cite>[1] https://thenewstack.io/microsoft-rust-is-the-industrys-best-chance-at-safe-systems-programming/</cite>
+---
+
 
 class: nord-dark, middle, left
 
@@ -389,6 +418,7 @@ class: nord-dark, middle, left
 }
 ```
 ---
+
 class: nord-dark, middle, left
 
 ## Dependencies as data: GitHub API
@@ -397,7 +427,17 @@ class: nord-dark, middle, left
 
 class: nord-dark, middle, left
 
-## GitHub API v4 preview
+## Dependencies matter for security
+
+> OSS Components Make Up 90% of a Modern Application
+
+
+<cite>[1] Sonatype's 2020 State of Software Supply Chain.</cite>
+---
+
+class: nord-dark, middle, left
+
+## What dependencies does this project have?
 
 ```graphql
 {
@@ -500,6 +540,36 @@ class: nord-dark, middle, left
 
 ---
 
+class: nord-dark, middle, left
+
+## Input Validation matter for security
+
+> LangSec regards the Internet insecurity epidemic as a consequence of ad hoc input handling.
+
+<cite>http://spw20.langsec.org/</cite>
+---
+
+class: nord-dark, left, middle
+
+## Strings are unparsed data
+
+* SQL? String
+* Javascript? String
+* URL? String
+* JSON? String
+* XML? String
+* Base64 encoded video/image? String
+
+---
+
+class: nord-dark, left, middle
+
+> In summary, the problem with using strings is that you use one generic data type, for completely unstructured data, for many kinds of data, hiding the fact that there are many different languages involved, possibly very expressive ones, each with their own interpretation. ...  The Top 10 Security Software Design Flaws by Arce et al. also warn about the use of strings as an anti-pattern. <em>We would go one step further and argue that using structured types instead of strings is preferable everywhere.</em>
+
+<cite>Poll, Erik. "LangSec revisited: input security flaws of the second kind." 2018 IEEE Security and Privacy Workshops (SPW). IEEE, 2018.</cite>
+
+---
+
 class: nord-dark, left, middle,
 
 ### A GraphQL endpoint can describe the data it exposes and inputs it accepts.
@@ -518,9 +588,6 @@ class: nord-dark, left, middle,
 
 ---
 
-<iframe src="https://apis.guru/graphql-voyager/"><iframe>
-
----
 
 class: nord-dark, left, middle
 
@@ -555,6 +622,14 @@ findDomainsByOrg accepts the following string inputs:
 authenticateTwoFactor accepts the following string inputs:
   otpCode accepts a value of String!
 ```
+
+---
+
+class: nord-dark, middle, left
+
+## Bonus: data as data?
+
+<iframe src="https://apis.guru/graphql-voyager/"><iframe>
 
 ---
 
