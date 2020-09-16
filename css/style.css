@@ -19,6 +19,12 @@ ul li::before {
   content: none !important;
 }
 
+.face {
+	font-size: 3em;
+  display: flex;
+	place-content: center;
+}
+
 img {
   margin-left: auto;
   margin-right: auto;
@@ -69,7 +75,7 @@ blockquote p em {
 }
 
 .logo {
-	font-size: 15em;
+	font-size: 4em;
 }
 
 .logo img {

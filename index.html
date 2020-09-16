@@ -20,6 +20,7 @@
 class: nord-dark, center, middle, title
 
 .logo[🤖]
+
 # Building for automation
 
 ---
@@ -42,23 +43,34 @@ class: nord-dark, left, middle
 
 class: nord-dark, middle, left
 
-## What Tracker does: Makes things visible
+## Tracker: data to measure progress
 
-* Gathers data needed for a metric
-* Does it over time
-
----
-class: nord-dark, middle, left
-
-## Answering narrow questions is easy
-* TLS settings are derived from making connections to public services
-* Email security settings (DMARC) are derived from DNS queries
+* Makes connections to public services, extracts TLS settings
+* Queries DNS to learn email security settings (DMARC)
+* Does this over time
 
 ---
 
 class: nord-dark, middle, left
 
-## The bigger question: "Is the system secure*?"
+## Questions Tracker's data answers
+
+* Are TLS settings for a domain "good"?
+* Are email security settings (DMARC) for a domain "good"?
+* Are this/that group of domains "good"?
+* Are this/that group of domains trending towards "good"?
+
+---
+
+class: nord-dark, middle, left
+
+## These are helpful questions to answer (but narrow).
+
+---
+
+class: nord-dark, middle, left
+
+## Tracker of the future: Is the system secure*?
 
 ---
 
@@ -66,7 +78,8 @@ class: nord-dark, middle, left
 
 ### Security is the sum of many decisions at multiple layers
 
-* Platform/Infrastructure settings
+* Platform
+* Infrastructure
 * Languages
 * Dependencies
 * Workflow (who, and how)
@@ -75,36 +88,84 @@ class: nord-dark, middle, left
 
 ---
 
-class: nord-dark, middle, center
+class: nord-dark, middle, left
 
-## Building to answer "Is the system secure*?"
-# 🤔
+.face[🤔]
+## What data would support such analysis?
 
 ---
 
-class: nord-dark, center, middle
+class: nord-dark, left, middle
 
-## What data would support such analysis?
-# 🤔
+## Infrastructure As Data
 
-* Platform/Infrastructure settings: Kubernetes, Config Connector
-* Languages: GitHub API
-* Dependencies: GitHub API
-* Workflow (who, and how): GitHub API
-* Inputs & validation: GraphQL
+> ...*describing what your systems look like in simple machine readable data formats*. Have programs execute those data formats and ensure your infrastructure matches.
+
+<cite>Michael DeHaan - founder of Ansible - O'Reilly Radar, 2013</cite>
+
+---
+
+class: nord-dark, left, middle
+
+.face[🤔]
+### Could we represent each layer as data?
+
+* Platform
+* Infrastructure
+* Languages
+* Dependencies
+* Workflow (who, and how)
+* Inputs & validation
+* Application code
+
+---
+
+class: nord-dark, left, middle
+
+.face[🤔]
+### How to represent each layer as data?
+
+* Platform: *Kubernetes*
+* Infrastructure: *Config Connector*
+* Languages: *GitHub API*
+* Dependencies: *GitHub API*
+* Workflow (who, and how): *GitHub API*
+* Inputs & validation: *GraphQL*
 * Application code: ? (CodeQL?)
 
 ---
 
 class: nord-dark, center, middle
 
-## Platform/Infrastructure settings
+## Platform as data: Kubernetes
 
 ---
 
 class: nord-dark, left, middle
 
-## What ports *should* be open?
+## What services are running on our platform?
+
+```bash
+$ git clone --depth 1 git@github.com:canada-ca/tracker.git && cd tracker
+$ kustomize build platform/overlays/gke |  yq . | jq 'select(.kind == "Service").metadata.name'
+"dns-scanner"
+"https-scanner"
+"result-processor"
+"ssl-scanner"
+"postgres"
+"tracker-api"
+"cert-manager"
+"cert-manager-webhook"
+"tracker-frontend"
+"istio-ingressgateway"
+...
+```
+
+---
+
+class: nord-dark, left, middle
+
+## What ports *should* be exposed?
 
 ```bash
 $ git clone --depth 1 git@github.com:canada-ca/tracker.git && cd tracker
@@ -119,7 +180,17 @@ $ kustomize build platform/overlays/gke |  yq . | \
 
 class: nord-dark, left, middle
 
-## What ports *are* open?
+## Infrastructure As Data
+
+> ...describing what your systems look like in simple machine readable data formats. *Have programs execute those data formats and ensure your infrastructure matches*.
+
+<cite>Michael DeHaan - founder of Ansible - O'Reilly Radar, 2013</cite>
+
+---
+
+class: nord-dark, left, middle
+
+## What ports *are* exposed?
 
 ```bash
 $ sudo nmap -p- --reason pulse.alpha.canada.ca
@@ -141,13 +212,11 @@ Nmap done: 1 IP address (1 host up) scanned in 191.39 seconds
 
 class: nord-dark, middle, left
 
-## WIP: How about the infrastructure?
+## Infrastructure as data: Config Connector
 
 ---
 
 class: nord-dark, middle, left
-
-## Google Config Connector: Infrastructure as Data
 
 ```yaml
 # Our GKE cluster
@@ -157,7 +226,7 @@ metadata:
   annotations:
     cnrm.cloud.google.com/remove-default-node-pool: "false"
   name: tracker-two-dot-oh
-  namespace: tracker-test
+  namespace: tracker
 spec:
   # Place this cluster in Montreal for data residency
   # https://cloud.google.com/about/locations/montreal
@@ -207,6 +276,20 @@ spec:
 
 class: nord-dark, middle, left
 
+.ninety[![](images/shielded-nodes.png)]
+---
+
+class: nord-dark, middle, left
+
+```bash
+$ rg -i shieldednodes
+tracker.yaml
+127:  enableShieldedNodes: true
+```
+---
+
+class: nord-dark, middle, left
+
 ## Data residency? Accounts?
 
 ```bash
@@ -241,13 +324,7 @@ class: nord-dark, middle, left
 
 class: nord-dark, middle, left
 
-# GitHub API
-
----
-
-class: nord-dark, middle, left
-
-# Languages
+# Languages as data: GitHub API
 
 ---
 
@@ -305,7 +382,7 @@ class: nord-dark, middle, left
 ---
 class: nord-dark, middle, left
 
-## Dependencies
+## Dependencies as data: GitHub API
 
 ---
 
@@ -370,7 +447,7 @@ class: nord-dark, middle, left
 
 class: nord-dark, middle, left
 
-## Bonus: Are there any known vulnerabilities in this project?
+## Bonus: Vulnerabilities as data?
 
 ```graphql
 {
@@ -410,7 +487,7 @@ class: nord-dark, middle, left
 
 class: nord-dark, middle, left
 
-# Inputs & validation: GraphQL
+# Validation as data: GraphQL
 
 ---
 
@@ -552,7 +629,7 @@ class: nord-dark, middle, left
 ---
 class: nord-dark, middle, left
 
-# Workflow
+# Workflow as data
 
 ---
 
@@ -808,15 +885,6 @@ class: nord-dark, left, middle
 
 ---
 
-class: nord-dark, left, middle
-
-## Infrastructure As Data
-
-> “Infrastructure As Data” — describing what your systems look like in simple machine­-readable data formats. Have programs execute those data formats and ensure your infrastructure matches.
-
-<cite>Michael DeHaan - O'Reilly Radar, 2013</cite>
-
----
 
 class: nord-dark, center, middle
 
