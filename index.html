@@ -63,12 +63,20 @@ class: nord-dark, middle, left
 * Are TLS/DMARC settings for a domain "good"?
 * Are this/that group of domains "good"?
 * Are this/that group of domains trending towards "good"?
+* These answers are continuously updated
 
 ---
 
 class: nord-dark, middle, left
 
-## Our data doesn't answer: Is the system secure*?
+## But there are other questions...
+
+---
+
+class: nord-dark, middle, left
+
+### The moonshot of security automation:
+## Is the system secure*?
 
 ---
 
@@ -146,11 +154,14 @@ class: nord-dark, left, middle
 
 ---
 
-class: nord-dark, middle, center
+class: nord-dark, middle, left
 
-## Kubernetes: reality === config
+## Kubernetes
+* provides a data format for describing your system
+* executes that data
+* ensures running system matches
 
-.sixty[![](images/kubernetes-sync.svg)]
+.sync.sixty[![](images/kubernetes-sync.svg)]
 ---
 
 class: nord-dark, left, middle
@@ -235,10 +246,19 @@ $ kustomize build platform/overlays/gke | \
 
 ---
 
-
 class: nord-dark, middle, left
 
 ## Infrastructure as data: Config Connector
+
+---
+
+class: nord-dark, middle, left
+
+## Infrastructure settings
+
+* Security relevant
+* Policy relevant
+* Usually requires special access
 
 ---
 
@@ -256,7 +276,7 @@ metadata:
 spec:
   # Place this cluster in Montreal for data residency
   # https://cloud.google.com/about/locations/montreal
-  location: northamerica-northeast1 👀
+  location: northamerica-northeast1
   initialNodeCount: 1
   # Logs are centralized by default in Stackdriver
   # Our least privilege account gives nodes permission to write to these
@@ -302,10 +322,38 @@ spec:
 
 class: nord-dark, middle, left
 
-.ninety[![](images/shielded-nodes.png)]
+## Data residency: Which regions are used?
+
+```bash
+$ $ cat tracker.yaml | yq 'select(.kind == "ContainerCluster").spec.location'
+"northamerica-northeast1"
+
+$ rg location
+tracker.yaml
+103:  # https://cloud.google.com/about/locations/montreal
+104:  location: northamerica-northeast1
+160:  location: northamerica-northeast1
+```
+
 ---
 
 class: nord-dark, middle, left
+
+## NIST SP 800-190 guidance on Minimal OS?
+
+```bash
+$ cat tracker.yaml | \
+ yq 'select(.kind == "ContainerCluster").spec | { imageType: .nodeConfig.imageType}'
+{
+  "imageType": "COS_CONTAINERD"
+}
+
+```
+---
+
+class: nord-dark, middle, left
+
+## Are you using shielded nodes on GKE?
 
 ```bash
 $ rg -i shieldednodes
@@ -314,14 +362,12 @@ tracker.yaml
 ```
 ---
 
+
 class: nord-dark, middle, left
 
-## Data residency? Accounts?
+## Security: Accounts and permissions
 
 ```bash
-$ $ cat tracker.yaml | yq 'select(.kind == "ContainerCluster").spec.location'
-"northamerica-northeast1"
-
 $ cat tracker.yaml | yq 'select(.kind == "IAMServiceAccount")'
 {
   "apiVersion": "iam.cnrm.cloud.google.com/v1beta1",
@@ -340,11 +386,76 @@ $ cat tracker.yaml | yq 'select(.kind == "IAMServiceAccount")'
 
 class: nord-dark, middle, left
 
-# We can ask/answer these questions programmatically because:
+## Security: permissions
 
-* Application platform (everything to run the app) is data
-* Infrastructure (network, compute, accounts, etc) is data
-* Data is on GitHub: No special access needed
+```bash
+$ cat tracker.yaml | yq 'select(.kind == "IAMPolicyMember").spec | {role, member}'
+{
+  "role": "roles/project.owner",
+  "member": "user:mike.williamson@gcdigital.canada.ca"
+}
+{
+  "role": "roles/logging.logWriter",
+  "member": "serviceAccount:gke-least-privilege-account@track-compliance.iam.gserviceaccount.com"
+}
+{
+  "role": "roles/monitoring.metricWriter",
+  "member": "serviceAccount:gke-least-privilege-account@track-compliance.iam.gserviceaccount.com"
+}
+{
+  "role": "roles/monitoring.viewer",
+  "member": "serviceAccount:gke-least-privilege-account@track-compliance.iam.gserviceaccount.com"
+}
+```
+
+---
+
+class: nord-dark, middle, left
+
+## * as data: A tour
+
+* Platform: *Kubernetes*
+* Infrastructure: *Config Connector*
+* Languages: *GitHub API*
+* Dependencies: *GitHub API*
+* Workflow (who, and how): *GitHub API*
+* Inputs & validation: *GraphQL*
+* Application code: ? (CodeQL?)
+
+---
+
+class: nord-dark, middle, left
+
+## We adopted new tools to get platform/infrastructure as data
+
+---
+
+class: nord-dark, middle, left
+
+## Where we do the work can give us access to more data
+
+---
+
+class: nord-dark, middle, left
+
+## GitHub is a platform: It doesn't just host code
+
+* it understands languages
+* it understands common dependency manifests
+* it looks for vulnerable dependencies
+* recognizes cloud credentials
+* it records actions taken (opening/closing issues/PRs)
+* makes all of this available as data via it's API
+
+---
+
+class: nord-dark, left, middle
+
+## Platform
+
+> A platform abstracts away a messy problem so you can build on top of it.
+
+<cite>Sam Ghods -- CoFounder of Box</cite>
 
 ---
 
@@ -542,7 +653,7 @@ class: nord-dark, middle, left
 
 class: nord-dark, middle, left
 
-## Schema validation in the database
+## Schema validation protects the data
 
 .eighty[![https-everywhere](images/three-tier.svg)]
 
@@ -550,7 +661,7 @@ class: nord-dark, middle, left
 
 class: nord-dark, middle, left
 
-## Schema validation on the server
+## Schema validation protects everything
 
 .eighty[![https-everywhere](images/three-tier-graphql.svg)]
 
@@ -558,7 +669,7 @@ class: nord-dark, middle, left
 
 class: nord-dark, middle, left
 
-## Extend your schema: define your own data types
+## Validate with your own data types
 
 .eighty[![https-everywhere](images/sin-schema.png)]
 
@@ -566,22 +677,83 @@ class: nord-dark, middle, left
 
 class: nord-dark, middle, left
 
-## Extend your schema: define your own data types
+## Validate with your own data types
 
 .eighty[![https-everywhere](images/graphql-sin.png)]
 
 ---
 
-class: nord-dark, left, middle,
+class: nord-dark, middle, left
 
-### A GraphQL schema is data too
+### When your schema is data, validations are observable
+
+.eighty[![https-everywhere](images/schema-as-data.png)]
+
+---
+
+class: nord-dark, left, middle
+
+### When your schema is data, validations are auditable
+
+```bash
+$ npx graphql-attack-surface https://pulse.alpha.canada.ca/graphql
+
+
+findDomainsByOrg accepts the following string inputs:
+  before accepts a value of String
+  after accepts a value of String
+
+
+findMyDomains accepts the following string inputs:
+  before accepts a value of String
+  after accepts a value of String
+
+
+findMyOrganizations accepts the following string inputs:
+  before accepts a value of String
+  after accepts a value of String
+
+
+userList accepts the following string inputs:
+  before accepts a value of String
+  after accepts a value of String
+
+
+authenticateTwoFactor accepts the following string inputs:
+  otpCode accepts a value of String!
+
+```
+
+---
+
+class: nord-dark, middle, left
+
+## When your schema is data, it can be visualized
+
+---
+
+background-image: url(images/graphql-voyager.png)
+
+---
+
+class: nord-dark, middle, left
+
+# Workflow as data
+
+---
+
+class: nord-dark, middle, left
+
+## Who are the "outside collaborators" on this repo?
 
 ```graphql
 {
-  __schema {
-    queryType {
-      fields {
-        name
+  repository(owner: "canada-ca", name: "tracker") {
+    collaborators(first: 50 affiliation: DIRECT) {
+      edges {
+        node {
+          login
+        }
       }
     }
   }
@@ -590,33 +762,221 @@ class: nord-dark, left, middle,
 
 ---
 
-class: nord-dark, left, middle
+class: nord-dark, middle, left
 
-## Auditing schema validations:
+## Who are the "outside collaborators" on this repo?
+
+```json
+{
+  "data": {
+    "repository": {
+      "collaborators": {
+        "edges": [
+          {
+            "node": {
+              "login": "sleepycat"
+            }
+          },
+          {
+            "node": {
+              "login": "nslandolt"
+            }
+          },
+          {
+            "node": {
+              "login": "peacheym"
+            }
+          },
+          {
+            "node": {
+              "login": "tparrott-cse"
+            }
+          },
+          {
+            "node": {
+              "login": "Ethanljf"
+            }
+          },
+          {
+            "node": {
+              "login": "FestiveKyle"
+            }
+          },
+          {
+            "node": {
+              "login": "greggoryelton"
+            }
+          },
+          {
+            "node": {
+              "login": "michaeldavie-cyber"
+            }
+          },
+          {
+            "node": {
+              "login": "lcampbell2"
+            }
+          }
+        ]
+      }
+    }
+  }
+}
+```
+---
+
+class: nord-dark, middle, left
+
+## Who has admin access to this repo?
+
+```graphql
+{
+  repository(owner: "canada-ca", name: "tracker") {
+    collaborators(first: 50 affiliation: ALL) {
+      edges {
+        permission
+        node {
+          login
+        }
+      }
+    }
+  }
+}
+```
+---
+
+class: nord-dark, middle, left
+
+## Who has access to this repo?
 
 ```bash
-$ npx graphql-attack-surface https://swapi.graph.cool
-npx: installed 138 in 13.706s
-
-createFilm accepts the following string inputs:
-  director accepts a value of String
-  openingCrawl accepts a value of String
-  producers accepts a value of [String!]
-  title accepts a value of String!
+$ cat users.json | jq '.data.repository.collaborators.edges[].node.login' | wc -l
+46
+$ cat users.json | jq '.data.repository.collaborators.edges[].permission == "ADMIN"' | grep -c true
+7
 ```
+---
+
+class: nord-dark, middle, left
+
+## Are we doing code review?
+
+```graphql
+{
+  repository(owner: "canada-ca", name: "tracker") {
+    nameWithOwner
+    pullRequests(last: 5 states: MERGED) {
+      nodes {
+        author {
+          login
+        }
+        reviews(last: 1) {
+          edges {
+            node {
+              author {
+                login
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+---
+
+class: nord-dark, middle, left
+
+```json
+{
+  "data": {
+    "repository": {
+      "nameWithOwner": "canada-ca/tracker",
+      "pullRequests": {
+        "nodes": [
+          {
+            "author": {
+              "login": "FestiveKyle"
+            },
+            "reviews": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "sleepycat"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "author": {
+              "login": "sleepycat"
+            },
+            "reviews": {
+              "edges": []
+            }
+          },
+        ]
+      }
+    }
+  }
+}
+```
+---
+
+class: nord-dark, left, middle
+
+## * as data: A tour
+
+* Platform: *Kubernetes*
+* Infrastructure: *Config Connector*
+* Languages: *GitHub API*
+* Dependencies: *GitHub API*
+* Workflow (who, and how): *GitHub API*
+* Inputs & validation: *GraphQL*
+* Application code: ? (CodeQL?)
 
 ---
 
 class: nord-dark, middle, left
 
-## Bonus: visualising schemas
+# We can ask/answer these questions programmatically because:
+
+* Platform: *data*
+* Infrastructure: *data*
+* Languages: *data*
+* Dependencies: *data*
+* Workflow (who, and how): *data*
+* Inputs & validation: *data*
+* Application code: ?
 
 ---
 
+class: nord-dark, left, middle
 
-<iframe src="https://apis.guru/graphql-voyager/"><iframe>
+## Things we've learned
+
+* Security automation is built on data
+* Most things can be turned into data
+* If that data is public, assurance work doesn't need special access
+* Much of the security/compliance work could be automated...
+* ...if dev/ops choose tech/tools that fit the "* as data" paradigm
 
 ---
+
+class: nord-dark, left, middle
+
+## We need experiments like this
+
+* Dev: 🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈
+* Ops: 🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈
+* Sec: 🐈
+
+---
+
 
 class: nord-dark, middle, left
 
@@ -695,152 +1055,10 @@ class: nord-dark, middle, left
   }
 }
 ```
----
-class: nord-dark, middle, left
-
-# Workflow as data
 
 ---
 
-class: nord-dark, middle, left
 
-# Are we doing code review?
-
-```graphql
-{
-  repository(owner: "canada-ca", name: "tracker") {
-    nameWithOwner
-    pullRequests(last: 5 states: MERGED) {
-      nodes {
-        author {
-          login
-        }
-        reviews(last: 1) {
-          edges {
-            node {
-              author {
-                login
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
-```
----
-
-class: nord-dark, middle, left
-
-```json
-{
-  "data": {
-    "repository": {
-      "nameWithOwner": "canada-ca/tracker",
-      "pullRequests": {
-        "nodes": [
-          {
-            "author": {
-              "login": "FestiveKyle"
-            },
-            "reviews": {
-              "edges": [
-                {
-                  "node": {
-                    "author": {
-                      "login": "sleepycat"
-                    }
-                  }
-                }
-              ]
-            }
-          },
-          {
-            "author": {
-              "login": "sleepycat"
-            },
-            "reviews": {
-              "edges": []
-            }
-          },
-        ]
-      }
-    }
-  }
-}
-```
----
-
-class: nord-dark, middle, left
-
-## Are branch protections being used?
-
-```graphql
-{
-  repository(owner: "canada-ca", name: "tracker") {
-    nameWithOwner
-    branchProtectionRules(first: 5) {
-      edges {
-        node {
-          id
-        }
-      }
-    }
-  }
-}
-
-```
----
-
-class: nord-dark, middle, left
-
-```json
-{
-  "data": {
-    "repository": {
-      "nameWithOwner": "canada-ca/tracker",
-      "branchProtectionRules": {
-        "edges": []
-      }
-    }
-  }
-}
-```
----
-
-class: nord-dark, middle, left
-
-```yaml
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    app: helloworld
-  name: helloworld
-spec:
-  ports:
-  - name: 80-3000
-    port: 80
-    protocol: TCP
-    targetPort: 3000
-  selector:
-    app: helloworld
-  type: LoadBalancer
-status:
-  loadBalancer: {}
-```
----
-
-class: nord-dark, left, middle
-
-## Security has a problem.
-
-* Dev: 🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈
-* Ops: 🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈
-* Sec: 🐈
-
----
 
 class: nord-dark, middle, left
 
@@ -860,56 +1078,6 @@ class: nord-dark, middle, left
 ### A.2.3.12.4 Use distributed architectures
 
 ---
-
-class: nord-dark, middle, left
-
-```yaml
-apiversion: apps/v1
-kind: deployment
-metadata:
-  labels:
-    app: helloworld
-  name: helloworld
-spec:
-  replicas: 1
-  selector:
-    matchlabels:
-      app: helloworld
-  template:
-    metadata:
-      labels:
-        app: helloworld
-    spec:
-      containers:
-      - image: mikewilliamson/helloworld
-        name: helloworld
-```
-
----
-
-class: nord-dark, middle, left
-
-```yaml
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    app: helloworld
-  name: helloworld
-spec:
-  ports:
-  - name: 80-3000
-    port: 80
-    protocol: TCP
-    targetPort: 3000
-  selector:
-    app: helloworld
-  type: LoadBalancer
-status:
-  loadBalancer: {}
-```
----
-
 
 class: nord-dark, center, middle, terminal
 
@@ -1009,13 +1177,6 @@ class: nord-dark, left, middle
 
 ---
 
-
-class: nord-dark, left, middle,
-
-## Security automation with GraphQL introspection
-
----
-
 class: nord-dark, left, middle
 
 * What domains are even out there?
@@ -1026,15 +1187,6 @@ class: nord-dark, left, middle
 
 ---
 
-class: nord-dark, left, middle
-
-## Platform
-
-> A platform abstracts away a messy problem so you can build on top of it.
-
-<cite>Sam Ghods -- CoFounder of Box</cite>
-
----
 
 
 class: nord-dark, center, middle
@@ -1173,45 +1325,6 @@ class: nord-dark, middle, left
 * Servers choose from the ciphers the client offers
 
 ---
-
-class: nord-dark, middle, left
-
-## Input Validation matters for security
-
-> LangSec regards the Internet insecurity epidemic as a consequence of ad hoc input handling.
-
-<cite>http://spw20.langsec.org</cite>
-
----
-
-class: nord-dark, left, middle
-
->the problem with using strings is that you use one generic data type, for completely unstructured data, for many kinds of data, hiding the fact that there are many different languages involved, possibly very expressive ones, each with their own interpretation. ...  The Top 10 Security Software Design Flaws by Arce et al. also warn about the use of strings as an anti-pattern. <em>We would go one step further and argue that using structured types instead of strings is preferable everywhere.</em>
-
-<cite>Poll, Erik. "LangSec revisited: input security flaws of the second kind." 2018 IEEE Security and Privacy Workshops (SPW). IEEE, 2018.</cite>
-
----
-
-class: nord-dark, middle, left
-
-## Auditing schema validations:
-
-```bash
-$ npx graphql-attack-surface "https://pulse.alpha.canada.ca/graphql"
-
-findDomainsByOrg accepts the following string inputs:
-  before accepts a value of String
-  after accepts a value of String
-
-...
-
-authenticateTwoFactor accepts the following string inputs:
-  otpCode accepts a value of String!
-```
-
----
-
-
 
 
 class: nord-dark, middle, center

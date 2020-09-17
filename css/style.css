@@ -4,6 +4,12 @@
   text-shadow: 0 0 20px #333;
 }
 
+.sync {
+    position: absolute;
+    top: 9em;
+    left: 35em;
+}
+
 .remark-code-line-highlighted {
     background-color: #2e3440;
 }
