@@ -542,37 +542,39 @@ class: nord-dark, middle, left
 
 class: nord-dark, middle, left
 
-## Input Validation matter for security
+## Schema validation in the database
 
-> LangSec regards the Internet insecurity epidemic as a consequence of ad hoc input handling.
-
-<cite>http://spw20.langsec.org/</cite>
----
-
-class: nord-dark, left, middle
-
-## Strings are unparsed data
-
-* SQL? String
-* Javascript? String
-* URL? String
-* JSON? String
-* XML? String
-* Base64 encoded video/image? String
+.eighty[![https-everywhere](images/three-tier.svg)]
 
 ---
 
-class: nord-dark, left, middle
+class: nord-dark, middle, left
 
-> In summary, the problem with using strings is that you use one generic data type, for completely unstructured data, for many kinds of data, hiding the fact that there are many different languages involved, possibly very expressive ones, each with their own interpretation. ...  The Top 10 Security Software Design Flaws by Arce et al. also warn about the use of strings as an anti-pattern. <em>We would go one step further and argue that using structured types instead of strings is preferable everywhere.</em>
+## Schema validation on the server
 
-<cite>Poll, Erik. "LangSec revisited: input security flaws of the second kind." 2018 IEEE Security and Privacy Workshops (SPW). IEEE, 2018.</cite>
+.eighty[![https-everywhere](images/three-tier-graphql.svg)]
+
+---
+
+class: nord-dark, middle, left
+
+## Extend your schema: define your own data types
+
+.eighty[![https-everywhere](images/sin-schema.png)]
+
+---
+
+class: nord-dark, middle, left
+
+## Extend your schema: define your own data types
+
+.eighty[![https-everywhere](images/graphql-sin.png)]
 
 ---
 
 class: nord-dark, left, middle,
 
-### A GraphQL endpoint can describe the data it exposes and inputs it accepts.
+### A GraphQL schema is data too
 
 ```graphql
 {
@@ -588,10 +590,9 @@ class: nord-dark, left, middle,
 
 ---
 
-
 class: nord-dark, left, middle
 
-## Introspection powered API audits for string inputs!
+## Auditing schema validations:
 
 ```bash
 $ npx graphql-attack-surface https://swapi.graph.cool
@@ -608,26 +609,10 @@ createFilm accepts the following string inputs:
 
 class: nord-dark, middle, left
 
-## Introspection powered API audits for string inputs!
-
-```bash
-$ npx graphql-attack-surface "https://pulse.alpha.canada.ca/graphql"
-
-findDomainsByOrg accepts the following string inputs:
-  before accepts a value of String
-  after accepts a value of String
-
-...
-
-authenticateTwoFactor accepts the following string inputs:
-  otpCode accepts a value of String!
-```
+## Bonus: visualising schemas
 
 ---
 
-class: nord-dark, middle, left
-
-## Bonus: data as data?
 
 <iframe src="https://apis.guru/graphql-voyager/"><iframe>
 
@@ -1186,6 +1171,43 @@ class: nord-dark, middle, left
 
 * Servers don't tell you what they support
 * Servers choose from the ciphers the client offers
+
+---
+
+class: nord-dark, middle, left
+
+## Input Validation matters for security
+
+> LangSec regards the Internet insecurity epidemic as a consequence of ad hoc input handling.
+
+<cite>http://spw20.langsec.org</cite>
+
+---
+
+class: nord-dark, left, middle
+
+>the problem with using strings is that you use one generic data type, for completely unstructured data, for many kinds of data, hiding the fact that there are many different languages involved, possibly very expressive ones, each with their own interpretation. ...  The Top 10 Security Software Design Flaws by Arce et al. also warn about the use of strings as an anti-pattern. <em>We would go one step further and argue that using structured types instead of strings is preferable everywhere.</em>
+
+<cite>Poll, Erik. "LangSec revisited: input security flaws of the second kind." 2018 IEEE Security and Privacy Workshops (SPW). IEEE, 2018.</cite>
+
+---
+
+class: nord-dark, middle, left
+
+## Auditing schema validations:
+
+```bash
+$ npx graphql-attack-surface "https://pulse.alpha.canada.ca/graphql"
+
+findDomainsByOrg accepts the following string inputs:
+  before accepts a value of String
+  after accepts a value of String
+
+...
+
+authenticateTwoFactor accepts the following string inputs:
+  otpCode accepts a value of String!
+```
 
 ---
 
