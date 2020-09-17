@@ -325,14 +325,17 @@ class: nord-dark, middle, left
 ## Data residency: Which regions are used?
 
 ```bash
-$ $ cat tracker.yaml | yq 'select(.kind == "ContainerCluster").spec.location'
-"northamerica-northeast1"
+$ cat tracker.yaml | \
+ yq '{type: .kind, location: .spec.location} | select (.location!=null)'
+{
+  "type": "ContainerCluster",
+  "location": "northamerica-northeast1"
+}
+{
+  "type": "ComputeAddress",
+  "location": "northamerica-northeast1"
+}
 
-$ rg location
-tracker.yaml
-103:  # https://cloud.google.com/about/locations/montreal
-104:  location: northamerica-northeast1
-160:  location: northamerica-northeast1
 ```
 
 ---
@@ -343,7 +346,7 @@ class: nord-dark, middle, left
 
 ```bash
 $ cat tracker.yaml | \
- yq 'select(.kind == "ContainerCluster").spec | { imageType: .nodeConfig.imageType}'
+ yq 'select(.kind == "ContainerCluster").spec | { imageType: .nodeConfig.imageType }'
 {
   "imageType": "COS_CONTAINERD"
 }
@@ -353,12 +356,15 @@ $ cat tracker.yaml | \
 
 class: nord-dark, middle, left
 
-## Are you using shielded nodes on GKE?
+## Security: Shielded nodes on GKE?
 
 ```bash
-$ rg -i shieldednodes
-tracker.yaml
-127:  enableShieldedNodes: true
+$ cat tracker.yaml | \
+ yq 'select(.kind == "ContainerCluster").spec | { enableShieldedNodes }'
+{
+  "enableShieldedNodes": true
+}
+
 ```
 ---
 
@@ -426,13 +432,19 @@ class: nord-dark, middle, left
 
 class: nord-dark, middle, left
 
-## We adopted new tools to get platform/infrastructure as data
+### We adopted new tools to get platform/infrastructure as data
 
 ---
 
 class: nord-dark, middle, left
 
-## Where we do the work can give us access to more data
+### Where we do the work can give us access to more data
+
+---
+
+class: nord-dark, middle, left
+
+## GitHub
 
 ---
 
@@ -607,7 +619,8 @@ class: nord-dark, middle, left
 
 class: nord-dark, middle, left
 
-## Bonus: Vulnerabilities as data?
+## Bonus: Vulnerabilities as data!
+(PHP, Java, .NET, Python, Ruby, JavaScript)
 
 ```graphql
 {
