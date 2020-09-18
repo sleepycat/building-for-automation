@@ -42,7 +42,7 @@ class: nord-dark, left, middle
 
 ## Tracker
 
-.eighty[![tracker](images/tracker.png)]
+.eighty[![tracker](images/tracker-tour.gif)]
 
 ---
 
@@ -254,15 +254,84 @@ class: nord-dark, middle, left
 
 class: nord-dark, middle, left
 
-## Infrastructure settings
+## Kubernetes
+* provides a data format for describing your system
+* executes that data
+* ensures running system matches
 
-* Security relevant
-* Policy relevant
-* Usually requires special access
+.sync.sixty[![](images/kubernetes-sync.svg)]
 
 ---
 
 class: nord-dark, middle, left
+
+## Config Connector
+* provides 91 resources describing GCP infrastructure
+* Extends Kubernetes to act on these new types
+
+.sync.sixty[![](images/config-connector-sync.svg)]
+
+---
+class: nord-dark, middle, left
+
+## New additions to the Kubernetes world
+
+```yaml
+apiVersion: sql.cnrm.cloud.google.com/v1beta1
+kind: SQLInstance
+metadata:
+  name: sqluser-dep
+spec:
+  region: us-central1
+  databaseVersion: MYSQL_5_7
+  settings:
+    tier: db-n1-standard-1
+```
+
+---
+
+class: nord-dark, middle, left
+
+## Does this meet our data residency requirements?
+
+```yaml
+apiVersion: sql.cnrm.cloud.google.com/v1beta1
+kind: SQLInstance
+metadata:
+  name: sqluser-dep
+spec:
+*  region: us-central1
+  databaseVersion: MYSQL_5_7
+  settings:
+    tier: db-n1-standard-1
+```
+
+---
+
+class: nord-dark, middle, left
+
+## DNS
+
+```yaml
+  apiVersion: dns.cnrm.cloud.google.com/v1beta1
+  kind: DNSRecordSet
+  metadata:
+    name: dnsrecordset-sample-a
+  spec:
+    name: "www.example.com."
+    type: "A"
+    ttl: 300
+    managedZoneRef:
+      name: dnsrecordset-dep-a
+    rrdatas:
+    - "8.8.8.8"
+```
+
+---
+
+class: nord-dark, middle, left
+
+## Kubernetes
 
 ```yaml
 # Our GKE cluster
@@ -320,25 +389,6 @@ spec:
 
 ---
 
-class: nord-dark, middle, left
-
-## Data residency: Which regions are used?
-
-```bash
-$ cat tracker.yaml | \
- yq '{type: .kind, location: .spec.location} | select (.location!=null)'
-{
-  "type": "ContainerCluster",
-  "location": "northamerica-northeast1"
-}
-{
-  "type": "ComputeAddress",
-  "location": "northamerica-northeast1"
-}
-
-```
-
----
 
 class: nord-dark, middle, left
 
@@ -374,17 +424,11 @@ class: nord-dark, middle, left
 ## Security: Accounts and permissions
 
 ```bash
-$ cat tracker.yaml | yq 'select(.kind == "IAMServiceAccount")'
+$ cat tracker.yaml | \
+ yq 'select(.kind == "IAMServiceAccount") | {kind: .kind, name: .metadata.name } '
 {
-  "apiVersion": "iam.cnrm.cloud.google.com/v1beta1",
   "kind": "IAMServiceAccount",
-  "metadata": {
-    "name": "gke-least-privilege-account",
-    "namespace": "tracker-test"
-  },
-  "spec": {
-    "displayName": "least privilege GKE service account"
-  }
+  "name": "gke-least-privilege-account"
 }
 ```
 
@@ -444,13 +488,29 @@ class: nord-dark, middle, left
 
 class: nord-dark, middle, left
 
-## GitHub
+# GitHub ~~the code hosting service~~
 
 ---
 
 class: nord-dark, middle, left
 
-## GitHub is a platform: It doesn't just host code
+# GitHub the platform
+
+---
+
+class: nord-dark, left, middle
+
+## Platform?
+
+> A platform abstracts away a messy problem so you can build on top of it.
+
+<cite>Sam Ghods -- CoFounder of Box</cite>
+
+---
+
+class: nord-dark, middle, left
+
+## GitHub does more than host your code
 
 * it understands languages
 * it understands common dependency manifests
@@ -461,15 +521,6 @@ class: nord-dark, middle, left
 
 ---
 
-class: nord-dark, left, middle
-
-## Platform
-
-> A platform abstracts away a messy problem so you can build on top of it.
-
-<cite>Sam Ghods -- CoFounder of Box</cite>
-
----
 
 class: nord-dark, middle, left
 
@@ -658,96 +709,6 @@ class: nord-dark, middle, left
 
 ---
 
-class: nord-dark, middle, left
-
-# Validation as data: GraphQL
-
----
-
-class: nord-dark, middle, left
-
-## Schema validation protects the data
-
-.eighty[![https-everywhere](images/three-tier.svg)]
-
----
-
-class: nord-dark, middle, left
-
-## Schema validation protects everything
-
-.eighty[![https-everywhere](images/three-tier-graphql.svg)]
-
----
-
-class: nord-dark, middle, left
-
-## Validate with your own data types
-
-.eighty[![https-everywhere](images/sin-schema.png)]
-
----
-
-class: nord-dark, middle, left
-
-## Validate with your own data types
-
-.eighty[![https-everywhere](images/graphql-sin.png)]
-
----
-
-class: nord-dark, middle, left
-
-### When your schema is data, validations are observable
-
-.eighty[![https-everywhere](images/schema-as-data.png)]
-
----
-
-class: nord-dark, left, middle
-
-### When your schema is data, validations are auditable
-
-```bash
-$ npx graphql-attack-surface https://pulse.alpha.canada.ca/graphql
-
-
-findDomainsByOrg accepts the following string inputs:
-  before accepts a value of String
-  after accepts a value of String
-
-
-findMyDomains accepts the following string inputs:
-  before accepts a value of String
-  after accepts a value of String
-
-
-findMyOrganizations accepts the following string inputs:
-  before accepts a value of String
-  after accepts a value of String
-
-
-userList accepts the following string inputs:
-  before accepts a value of String
-  after accepts a value of String
-
-
-authenticateTwoFactor accepts the following string inputs:
-  otpCode accepts a value of String!
-
-```
-
----
-
-class: nord-dark, middle, left
-
-## When your schema is data, it can be visualized
-
----
-
-background-image: url(images/graphql-voyager.png)
-
----
 
 class: nord-dark, middle, left
 
@@ -940,6 +901,97 @@ class: nord-dark, middle, left
 ```
 ---
 
+class: nord-dark, middle, left
+
+# Validation as data: GraphQL
+
+---
+
+class: nord-dark, middle, left
+
+## Schema validation protects the data
+
+.eighty[![https-everywhere](images/three-tier.svg)]
+
+---
+
+class: nord-dark, middle, left
+
+## Schema validation protects everything
+
+.eighty[![https-everywhere](images/three-tier-graphql.svg)]
+
+---
+
+class: nord-dark, middle, left
+
+## Validate with your own data types
+
+.eighty[![https-everywhere](images/sin-schema.png)]
+
+---
+
+class: nord-dark, middle, left
+
+## Validate with your own data types
+
+.eighty[![https-everywhere](images/graphql-sin.png)]
+
+---
+
+class: nord-dark, middle, left
+
+### When your schema is data, validations are observable
+
+.eighty[![https-everywhere](images/schema-as-data.png)]
+
+---
+
+class: nord-dark, left, middle
+
+### When your schema is data, validations are auditable
+
+```bash
+$ npx graphql-attack-surface https://pulse.alpha.canada.ca/graphql
+
+
+findDomainsByOrg accepts the following string inputs:
+  before accepts a value of String
+  after accepts a value of String
+
+
+findMyDomains accepts the following string inputs:
+  before accepts a value of String
+  after accepts a value of String
+
+
+findMyOrganizations accepts the following string inputs:
+  before accepts a value of String
+  after accepts a value of String
+
+
+userList accepts the following string inputs:
+  before accepts a value of String
+  after accepts a value of String
+
+
+authenticateTwoFactor accepts the following string inputs:
+  otpCode accepts a value of String!
+
+```
+
+---
+
+class: nord-dark, middle, left
+
+## When your schema is data, it can be visualized
+
+---
+
+background-image: url(images/graphql-voyager.png)
+
+---
+
 class: nord-dark, left, middle
 
 ## * as data: A tour
@@ -956,7 +1008,7 @@ class: nord-dark, left, middle
 
 class: nord-dark, middle, left
 
-# We can ask/answer these questions programmatically because:
+# Building this way is enabling automation
 
 * Platform: *data*
 * Infrastructure: *data*
@@ -972,10 +1024,50 @@ class: nord-dark, left, middle
 
 ## Things we've learned
 
-* Security automation is built on data
-* Most things can be turned into data
-* If that data is public, assurance work doesn't need special access
+* Automation (security and otherwise) is built on data
+
+--
+
+* Most things can be turned into data (via tech or platforms)
+
+--
+
+* If data is public, analysis doesn't need special access
+
+--
+
+* The gap between documents and reality is a problem
+
+--
+
+* The gap between data and reality is fixable
+
+---
+
+class: nord-dark, middle, left
+
+### 2 infinite loops, 0 configuration drift
+
+.eighty[![gitops](images/gitops2.svg)]
+
+---
+
+class: nord-dark, middle, left
+
+### 2 infinite loops, 0 configuration drift
+
+.eighty[![gitops](images/gitops.svg)]
+
+---
+
+class: nord-dark, left, middle
+
+## More things we've learned
+
 * Much of the security/compliance work could be automated...
+
+--
+
 * ...if dev/ops choose tech/tools that fit the "* as data" paradigm
 
 ---
@@ -989,356 +1081,6 @@ class: nord-dark, left, middle
 * Sec: 🐈
 
 ---
-
-
-class: nord-dark, middle, left
-
-## Are we able to trace our images back to commits?
-
----
-
-class: nord-dark, middle, left
-
-## Are we able to trace our images back to commits?
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: tracker-frontend
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: tracker-frontend
-  template:
-    metadata:
-      labels:
-        app: tracker-frontend
-    spec:
-      containers:
-*      - image: gcr.io/track-compliance/frontend:master-2bea7ec
-        name: frontend
-        ports:
-        - containerPort: 3000
-
-```
-
----
-
-class: nord-dark, middle, left
-
-## Are we doing code review?
-
-```graphql
-{
-  repository(owner: "canada-ca", name: "tracker") {
-    object(expression: "2bea7ec") {
-      ... on Commit {
-        message
-        author {
-          date
-          email
-          name
-        }
-      }
-    }
-  }
-}
-
-```
-
----
-
-class: nord-dark, middle, left
-
-```json
-{
-  "data": {
-    "repository": {
-      "object": {
-        "message": "Add padding to SignInPage (#743)\n\nThis commit simply adds some padding to the SignInPage so that the imputs\r\naren't slammed up against the sides of the screen on mobile devices.",
-        "author": {
-          "date": "2020-08-05T14:10:11.000-04:00",
-          "email": "mike@korora.ca",
-          "name": "Mike Williamson"
-        }
-      }
-    }
-  }
-}
-```
-
----
-
-
-
-class: nord-dark, middle, left
-
-#### Directive on Service and Digital
-##### Mandatory Procedures for Enterprise Architecture Assessment
-
-### A.2.3.10.4 Run applications in containers
-
----
-
-class: nord-dark, middle, left
-
-#### Directive on Service and Digital
-##### Mandatory Procedures for Enterprise Architecture Assessment
-
-
-### A.2.3.12.4 Use distributed architectures
-
----
-
-class: nord-dark, center, middle, terminal
-
-## Security implications
-
-![](images/kiali-e2e.gif)
-
----
-class: nord-dark, middle, left
-
->Let’s Encrypt offers only domain validation, since only DV can be completely automated and the security benefits of OV and EV are unclear.
-
-<cite>Aas, Josh, et al. "Let's Encrypt: An Automated Certificate Authority to Encrypt the Entire Web." Proceedings of the 2019 ACM SIGSAC Conference on Computer and Communications Security. 2019.</cite>
-
----
-
-
-class: nord-dark, center, middle
-
-## Government isn't forms. It's services.
-
----
-
-class: nord-dark, left, middle
-
-## There are patterns in the work of service delivery
-
-* researching
-* designing
-* building
-* deploying
-* running
-* testing
-* updating
-* monitoring
-* auditing
-* vulnerability scanning
-* patching
-* recovering
-* validating
-* authenticating
-
----
-
-
-class: nord-dark, center, middle
-
-## Automation: Building applications for repetitive work
-
-
-* The work of
-building,
-running,
-testing,
-deploying,
-updating,
-monitoring,
-auditing
-vulnerability scanning,
-patching,
-snapshotting,
----
-class: nord-dark, center, middle
-
-## Back in 1995:
-
----
-
-class: nord-dark, left, middle
-
-## Is Netscape 2.0 a platform or an application?
-
-> It's a little of both. It's an application in that it runs on top of what is traditionally thought of as an operating system - like Windows or Unix - but it's a platform in that people can build applications on it.
-
-<cite>Bayers, C. "Why Bill Gates Wants to Be the Next Marc Andreessen", Wired Magazine (1995).</cite>
-
----
-
-class: nord-dark, left, middle
-
-## What lets us build on it?
-
-* Browsers turn documents into data
-* Browsers turn user interactions (mouseover) into data
-* Browsers mediate sending/receiving data to device sensors
-* Browsers offer interfaces that allow access to this data
-
----
-
-class: nord-dark, left, middle
-
-## Platform
-
-> A boundary layer presenting an interface that makes technically/organizationally/economically difficult to capture data/events happening on one side more easily consumable on the other.
-
-<cite>Me. This slide. Now.</cite>
-
----
-
-class: nord-dark, left, middle
-
-* What domains are even out there?
-* Which department owns a domain?
-## Getting data to answer questions is hard...
-* Is this a government employee?
-* Which department is this user from?
-
----
-
-
-
-class: nord-dark, center, middle
-
-## Platform
-
-.fifty[![platform](images/platform.png)]
-
----
-
-class: nord-dark, center, middle
-
-## API
-
-.fifty[![platform](images/platform.png)]
-
----
-
-class: nord-dark, middle, left
-
-#### Directive on Service and Digital
-##### Mandatory Procedures on Application Programming Interfaces
-
-### B.2.2.4 Validate your API design by consuming it
-
----
-class: nord-dark, left, middle
-
-## Applications:
-
-> All the applications that have ever been written, have been written to output data based on some input data.
-
-<cite>Fabian, R. "Data-Oriented Design" (2016).</cite>
-
----
-
-class: nord-dark, middle, left
-
-## Domain settings
-
-```bash
-$ for v in ssl2 ssl3 tls1 tls1_1 tls1_2; do
->  for c in $(openssl ciphers 'ALL:eNULL' | tr ':' ' '); do
->  openssl s_client -connect pulse.alpha.canada.ca:443 \
->  -cipher $c -$v < /dev/null > /dev/null 2>&1 && echo -e "$v:\t$c"
->  done
-> done
-
-tls1_2:	ECDHE-RSA-AES256-GCM-SHA384
-tls1_2:	ECDHE-RSA-CHACHA20-POLY1305
-tls1_2:	ECDHE-RSA-AES128-GCM-SHA256
-```
-
----
-
----
-
-class: nord-dark, middle, left
-
-## TLS ciphers
-
----
-
-class: nord-dark, middle, left
-
-## Minimum Viable TLS cipher scanner
-
-```bash
-$ for v in tls1 tls1_1 tls1_2 tls1_3; do
->  for c in $(openssl ciphers 'ALL:eNULL' | tr ':' ' '); do
->  openssl s_client -connect pulse.alpha.canada.ca:443 \
->  -cipher $c -$v < /dev/null > /dev/null 2>&1 && echo "$v: $c"
->  done
-> done
-
-tls1_2:	ECDHE-RSA-AES256-GCM-SHA384
-tls1_2:	ECDHE-RSA-CHACHA20-POLY1305
-tls1_2:	ECDHE-RSA-AES128-GCM-SHA256
-...
-```
-
----
-
-class: nord-dark, center, middle
-
-## Aggregates
-
-.eighty[![tracker](images/loops.png)]
-
----
-
-class: nord-dark, middle, left
-
-## Trends
-
-.eighty[![tracker](images/loops-over-time.png)]
-
----
-
-
-
-class: nord-dark, middle, left
-
-## Creating a list of supported ciphers
-* 4 protocol versions
-* 163 ciphers
-* 652 connections
-
----
-
-
-class: nord-dark, center, middle
-
-## Platform
-
-.fifty[![platform](images/platform.png)]
-
----
-
-class: nord-dark, middle, left
-
-# More automation, needs more data
-
----
-class: nord-dark, middle, left
-
-## Gather data on the metric you want to move: TLS ciphers
-
----
-
-class: nord-dark, middle, left
-
-## TLS wasn't designed to be "observable"
-
-* Servers don't tell you what they support
-* Servers choose from the ciphers the client offers
-
----
-
 
 class: nord-dark, middle, center
 
