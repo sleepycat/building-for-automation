@@ -46,19 +46,10 @@ class: nord-dark, left, middle
 
 ---
 
-class: nord-dark, middle, left
-
-## Tracker's value: automated data gathering
-
-* Makes connections to public services, extracts TLS settings
-* Queries DNS to learn email security settings (DMARC)
-* Does this over time
-
----
 
 class: nord-dark, middle, left
 
-## Tracker's data allows answering certain questions
+## Automated answers about other peoples systems
 
 * Are TLS/DMARC settings for a domain "good"?
 * Are this/that group of domains "good"?
@@ -69,26 +60,22 @@ class: nord-dark, middle, left
 
 class: nord-dark, middle, left
 
-## But there are other questions...
+## Questions are limited by the data we can get
+
+* much of what the GoC cares about isn't visible from outside
+* We definitely don't want access to see it from the inside
 
 ---
 
 class: nord-dark, middle, left
 
-### The moonshot of security automation:
-## Is the system secure*?
+## How can we enable automated answers about Tracker?
 
 ---
 
 class: nord-dark, middle, left
 
-## Answering that would be valuable...
-
----
-
-class: nord-dark, middle, left
-
-## Security is the sum of decisions at multiple layers
+## Important decisions at multiple layers
 
 * Platform
 * Infrastructure
@@ -102,31 +89,21 @@ class: nord-dark, middle, left
 
 class: nord-dark, left, middle
 
-## Summing across layers requires layers as data
+## Measurement requires data
 
-* Platform
-* Infrastructure
-* Languages
-* Dependencies
-* Workflow (who, and how)
-* Inputs & validation
-* Application code
-
----
-
-class: nord-dark, left, middle
-
-## Infrastructure As Data
-
-> ...*describing what your systems look like in simple machine readable data formats*. Have programs execute those data formats and ensure your infrastructure matches.
-
-<cite>Michael DeHaan - founder of Ansible - O'Reilly Radar, 2013</cite>
+* Platform: *data*
+* Infrastructure: *data*
+* Languages: *data*
+* Dependencies: *data*
+* Workflow (who, and how): *data*
+* Inputs & validation: *data*
+* Application code: ?
 
 ---
 
 class: nord-dark, left, middle
 
-## * as data: A tour
+## * as data: A tour of Tracker
 
 * Platform: *Kubernetes*
 * Infrastructure: *Config Connector*
@@ -198,6 +175,11 @@ PORT    STATE SERVICE REASON
 
 Nmap done: 1 IP address (1 host up) scanned in 191.39 seconds
 ```
+
+---
+class: nord-dark, left, middle
+
+## Kubernetes: config is canonical
 
 ---
 
@@ -272,6 +254,7 @@ class: nord-dark, middle, left
 .sync.sixty[![](images/config-connector-sync.svg)]
 
 ---
+
 class: nord-dark, middle, left
 
 ## New additions to the Kubernetes world
@@ -292,7 +275,25 @@ spec:
 
 class: nord-dark, middle, left
 
-## Does this meet our data residency requirements?
+## How many security/policy requirements apply?
+
+```yaml
+apiVersion: sql.cnrm.cloud.google.com/v1beta1
+kind: SQLInstance
+metadata:
+  name: sqluser-dep
+spec:
+  region: us-central1
+  databaseVersion: MYSQL_5_7
+  settings:
+    tier: db-n1-standard-1
+```
+
+---
+
+class: nord-dark, middle, left
+
+## How many security/policy requirements apply?
 
 ```yaml
 apiVersion: sql.cnrm.cloud.google.com/v1beta1
@@ -310,22 +311,25 @@ spec:
 
 class: nord-dark, middle, left
 
-## DNS
+## How many security/policy requirements apply?
 
 ```yaml
-  apiVersion: dns.cnrm.cloud.google.com/v1beta1
-  kind: DNSRecordSet
-  metadata:
-    name: dnsrecordset-sample-a
-  spec:
-    name: "www.example.com."
-    type: "A"
-    ttl: 300
-    managedZoneRef:
-      name: dnsrecordset-dep-a
-    rrdatas:
-    - "8.8.8.8"
+apiVersion: sql.cnrm.cloud.google.com/v1beta1
+kind: SQLInstance
+metadata:
+  name: sqluser-dep
+spec:
+  region: us-central1
+*  databaseVersion: MYSQL_5_7
+  settings:
+    tier: db-n1-standard-1
 ```
+
+---
+
+class: nord-dark, middle, left
+
+## Mapping GoC requirements to 91 pieces of data is a tractable problem
 
 ---
 
@@ -439,11 +443,8 @@ class: nord-dark, middle, left
 ## Security: permissions
 
 ```bash
-$ cat tracker.yaml | yq 'select(.kind == "IAMPolicyMember").spec | {role, member}'
-{
-  "role": "roles/project.owner",
-  "member": "user:mike.williamson@gcdigital.canada.ca"
-}
+$ cat tracker.yaml | \
+ yq 'select(.kind == "IAMPolicyMember").spec | {role, member} | select(.member | contains("serviceAccount"))'
 {
   "role": "roles/logging.logWriter",
   "member": "serviceAccount:gke-least-privilege-account@track-compliance.iam.gserviceaccount.com"
@@ -456,6 +457,7 @@ $ cat tracker.yaml | yq 'select(.kind == "IAMPolicyMember").spec | {role, member
   "role": "roles/monitoring.viewer",
   "member": "serviceAccount:gke-least-privilege-account@track-compliance.iam.gserviceaccount.com"
 }
+
 ```
 
 ---
@@ -1076,7 +1078,16 @@ class: nord-dark, left, middle
 
 ## We need experiments like this
 
-* Dev: 🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈
+* Dev: 🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈<br/>
 * Ops: 🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈
 * Sec: 🐈
 
