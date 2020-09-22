@@ -12,6 +12,12 @@ pre {
   font-size: 2em;
 }
 
+.gitops {
+    position: absolute;
+    top: 9em;
+    left: 22em;
+}
+
 .sync {
     position: absolute;
     top: 9em;

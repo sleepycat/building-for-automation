@@ -42,7 +42,7 @@ class: nord-dark, left, middle
 
 ## Tracker
 
-.eighty[![tracker](images/tracker-tour.gif)]
+.eighty[![tracker](images/tracker-demo.gif)]
 
 ---
 
@@ -80,21 +80,7 @@ class: nord-dark, middle, left
 
 class: nord-dark, middle, left
 
-### Getting data is hard
-
-* Some things are visible, but weren't designed to make it easy
-  * Encryption algorithms: 4 protocol versions x 163 ciphers = 652 connections
-* Some things aren't visible from the outside
-  * Service accounts
-  * Deployment region
-  * Versions (libraries/supporting software)
-* Knowledge of a system isn't all in one place (dev/ops/...)
-
----
-
-class: nord-dark, middle, left
-
-### Security information exists at every layer
+### Important security information exists at every layer
 
 * Platform
 * Infrastructure
@@ -106,15 +92,9 @@ class: nord-dark, middle, left
 
 ---
 
-class: nord-dark, middle, left
-
-### How can we build Tracker to be "measurable"?
-
----
-
 class: nord-dark, left, middle
 
-### Measurement requires data
+### Analyzing any of this requires data
 
 * Platform: *data*
 * Infrastructure: *data*
@@ -128,7 +108,7 @@ class: nord-dark, left, middle
 
 class: nord-dark, left, middle
 
-### * as data: A tour of Tracker
+### * as data: Tracker as a testbed
 
 * Platform: *Kubernetes*
 * Infrastructure: *Config Connector*
@@ -154,17 +134,79 @@ class: nord-dark, middle, left
 * ensures running system matches
 
 .sync.sixty[![](images/kubernetes-sync.svg)]
+
+---
+
+
+class: nord-dark, middle, left
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tracker-frontend
+  namespace: frontend
+spec:
+*  replicas: 2
+  selector:
+    matchLabels:
+      app: tracker-frontend
+  template:
+    metadata:
+      labels:
+        app: tracker-frontend
+    spec:
+      containers:
+*      - image: gcr.io/track-compliance/frontend:master-320b5fd
+        name: frontend
+        ports:
+        - containerPort: 3000
+```
+
+---
+
+
+class: nord-dark, left, middle
+
+### What representing our platform as data gets us
+
+* operational wins
+* data for analysis
+
 ---
 
 class: nord-dark, left, middle
 
-### What ports *should* be exposed?
+### Operations: Deployments are just changing data
+
+```bash
+     name: gcr.io/track-compliance/frontend
+* -   newTag: master-d07b6e0
+* +   newTag: master-d55eaad
+```
+
+---
+
+class: nord-dark, left, middle
+
+### Operations: Rollbacks are just changing data
+
+```bash
+     name: gcr.io/track-compliance/frontend
+* +   newTag: master-d07b6e0
+* -   newTag: master-d55eaad
+```
+
+---
+
+class: nord-dark, left, middle
+
+### Analysis: What ports *should* be exposed?
 
 ```bash
 $ git clone --depth 1 git@github.com:canada-ca/tracker.git && cd tracker
 $ kustomize build platform/overlays/gke | \
 >   yq 'select(.kind == "Service" and .spec.type == "LoadBalancer").spec.ports[].port'
-
 80
 443
 ```
@@ -173,7 +215,7 @@ $ kustomize build platform/overlays/gke | \
 
 class: nord-dark, left, middle
 
-### What ports *are* exposed?
+### Analysis: What ports *are* exposed?
 
 ```bash
 $ sudo nmap -p- --reason pulse.alpha.canada.ca
@@ -193,65 +235,19 @@ Nmap done: 1 IP address (1 host up) scanned in 191.39 seconds
 
 ---
 
-class: nord-dark, left, middle
+class: nord-dark, middle, left
 
-### Kubernetes
+### Why that works
+* Data is on GitHub
+* Changes flow through.
 
-* *System* matches config
-* config is data (not code)
-* data can be analyzed
-* analysis can be automated
-
----
-
-class: nord-dark, left, middle
-
-### What kind of analysis?
+.gitops.sixty[![gitops](images/gitops2.svg)]
 
 ---
 
-class: nord-dark, left, middle
+class: nord-dark, middle, left
 
-### What services are running on our platform?
-
-```bash
-$ kustomize build platform/overlays/gke |  yq 'select(.kind == "Service").metadata.name'
-"dns-scanner"
-"https-scanner"
-"result-processor"
-"ssl-scanner"
-"postgres"
-"tracker-api"
-"cert-manager"
-"cert-manager-webhook"
-"tracker-frontend"
-"istio-ingressgateway"
-...
-```
-
----
-
-class: nord-dark, left, middle
-
-### What versions are running?
-
-```bash
-$ kustomize build platform/overlays/gke | \
-  yq 'select(.kind == "Deployment").spec.template.spec.containers[].image'
-"gcr.io/track-compliance/api:master-fcb74ce"
-"quay.io/jetstack/cert-manager-controller:v0.15.1"
-"quay.io/jetstack/cert-manager-cainjector:v0.15.1"
-"quay.io/jetstack/cert-manager-webhook:v0.15.1"
-"gcr.io/track-compliance/frontend:master-096601c"
-"docker.io/istio/proxyv2:1.6.4"
-"docker.io/jaegertracing/all-in-one:1.16"
-"docker.io/istio/pilot:1.6.4"
-"quay.io/kiali/kiali:v1.18"
-"docker.io/prom/prometheus:v2.15.1"
-"docker.io/istio/proxyv2:1.6.4"
-"grafana/grafana:latest"
-"prom/prometheus:v2.12.0"
-```
+### Bringing ideas to the infrastructure layer...
 
 ---
 
@@ -271,117 +267,9 @@ class: nord-dark, middle, left
 .sync.sixty[![](images/config-connector-sync.svg)]
 
 ---
-
-class: nord-dark, left, middle
-
-### Config Connector
-
-* *Cloud* matches config
-* config is data (not code)
-* data can be analyzed
-* analysis can be automated
-
----
-
-class: nord-dark, left, middle
-
-### What kind of analysis?
-
----
-
 class: nord-dark, middle, left
 
-### NIST SP 800-190 guidance on Minimal OS?
-
-```bash
-$ cat tracker.yaml | \
- yq 'select(.kind == "ContainerCluster").spec | { imageType: .nodeConfig.imageType }'
-{
-  "imageType": "COS_CONTAINERD"
-}
-
-```
----
-
-class: nord-dark, middle, left
-
-### Shielded nodes on GKE?
-
-```bash
-$ cat tracker.yaml | \
- yq 'select(.kind == "ContainerCluster").spec | { enableShieldedNodes }'
-{
-  "enableShieldedNodes": true
-}
-
-```
----
-
-
-class: nord-dark, middle, left
-
-### What service accounts are there?
-
-```bash
-$ cat tracker.yaml | \
- yq 'select(.kind == "IAMServiceAccount") | {kind: .kind, name: .metadata.name } '
-{
-  "kind": "IAMServiceAccount",
-  "name": "gke-least-privilege-account"
-}
-```
-
----
-
-class: nord-dark, middle, left
-
-### What permissions do service accounts have?
-
-```bash
-$ cat tracker.yaml | \
- yq 'select(.kind == "IAMPolicyMember").spec | {role, member} | select(.member | contains("serviceAccount"))'
-{
-  "role": "roles/logging.logWriter",
-  "member": "serviceAccount:gke-least-privilege-account@track-compliance.iam.gserviceaccount.com"
-}
-{
-  "role": "roles/monitoring.metricWriter",
-  "member": "serviceAccount:gke-least-privilege-account@track-compliance.iam.gserviceaccount.com"
-}
-{
-  "role": "roles/monitoring.viewer",
-  "member": "serviceAccount:gke-least-privilege-account@track-compliance.iam.gserviceaccount.com"
-}
-
-```
-
----
-
-class: nord-dark, middle, left
-
-### Where are service accounts used?
-
-```bash
-$ cat tracker.yaml | \
- yq '{kind: .kind, serviceAccount: .spec.nodeConfig.serviceAccountRef.external} | select (.serviceAccount!=null)'
-{
-  "kind": "ContainerCluster",
-  "serviceAccount": "gke-least-privilege-account@track-compliance.iam.gserviceaccount.com"
-}
-
-```
-
----
-
-class: nord-dark, middle, left
-
-## Automation possibilities
-
----
-
-class: nord-dark, middle, left
-
-### How much do we need to ask?
+### GCP services as data
 
 ```yaml
 apiVersion: sql.cnrm.cloud.google.com/v1beta1
@@ -405,7 +293,32 @@ spec:
 
 class: nord-dark, middle, left
 
-### How much do we need to ask?
+### Infrastructure as Data enables analysis
+
+```bash
+$ cat tracker.yaml | \
+ yq 'select(.kind == "IAMPolicyMember").spec | {role, member} | select(.member | contains("serviceAccount"))'
+{
+  "role": "roles/logging.logWriter",
+  "member": "serviceAccount:gke-least-privilege-account@track-compliance.iam.gserviceaccount.com"
+}
+{
+  "role": "roles/monitoring.metricWriter",
+  "member": "serviceAccount:gke-least-privilege-account@track-compliance.iam.gserviceaccount.com"
+}
+{
+  "role": "roles/monitoring.viewer",
+  "member": "serviceAccount:gke-least-privilege-account@track-compliance.iam.gserviceaccount.com"
+}
+
+```
+
+---
+
+
+class: nord-dark, middle, left
+
+### Data is the new documentation
 
 ```yaml
 apiVersion: sql.cnrm.cloud.google.com/v1beta1
@@ -428,7 +341,7 @@ spec:
 ---
 class: nord-dark, middle, left
 
-### How much do we need to ask?
+### Data is the new documentation
 
 ```yaml
 apiVersion: sql.cnrm.cloud.google.com/v1beta1
@@ -452,7 +365,7 @@ spec:
 
 class: nord-dark, middle, left
 
-### How much do we need to ask?
+### Data is the new documentation
 
 ```yaml
 apiVersion: sql.cnrm.cloud.google.com/v1beta1
@@ -476,10 +389,11 @@ spec:
 
 class: nord-dark, middle, left
 
-### Could we map data types & properties to ITSG 33 controls?
+### 2 infinite loops, 0 configuration drift
+
+.eighty[![gitops](images/gitops.svg)]
 
 ---
-
 
 class: nord-dark, middle, left
 
@@ -497,7 +411,7 @@ class: nord-dark, middle, left
 
 class: nord-dark, middle, left
 
-### We adopted new tools to get platform/infrastructure as data
+### Enabling automated analysis brought us operational benefits
 
 ---
 
@@ -528,7 +442,6 @@ class: nord-dark, middle, left
 * makes everything available as data via it's API
 
 ---
-
 
 class: nord-dark, middle, left
 
@@ -615,6 +528,7 @@ class: nord-dark, middle, left
 
 
 <cite>[1] Sonatype's 2020 State of Software Supply Chain.</cite>
+
 ---
 
 class: nord-dark, middle, left
@@ -725,89 +639,6 @@ class: nord-dark, middle, left
 
 class: nord-dark, middle, left
 
-### Who is working on this repo?
-
-```graphql
-{
-  repository(owner: "canada-ca", name: "tracker") {
-    collaborators(first: 50 affiliation: DIRECT) {
-      edges {
-        node {
-          login
-        }
-      }
-    }
-  }
-}
-```
-
----
-
-class: nord-dark, middle, left
-
-### Who is working on this repo?
-
-```json
-{
-  "data": {
-    "repository": {
-      "collaborators": {
-        "edges": [
-          {
-            "node": {
-              "login": "sleepycat"
-            }
-          },
-          {
-            "node": {
-              "login": "nslandolt"
-            }
-          },
-          {
-            "node": {
-              "login": "peacheym"
-            }
-          },
-          {
-            "node": {
-              "login": "tparrott-cse"
-            }
-          },
-          {
-            "node": {
-              "login": "Ethanljf"
-            }
-          },
-          {
-            "node": {
-              "login": "FestiveKyle"
-            }
-          },
-          {
-            "node": {
-              "login": "greggoryelton"
-            }
-          },
-          {
-            "node": {
-              "login": "michaeldavie-cyber"
-            }
-          },
-          {
-            "node": {
-              "login": "lcampbell2"
-            }
-          }
-        ]
-      }
-    }
-  }
-}
-```
----
-
-class: nord-dark, middle, left
-
 ### Are we doing code review?
 
 ```graphql
@@ -878,39 +709,6 @@ class: nord-dark, middle, left
 
 class: nord-dark, middle, left
 
-### Bonus: Who has admin access to this repo?
-
-```graphql
-{
-  repository(owner: "canada-ca", name: "tracker") {
-    collaborators(first: 50 affiliation: ALL) {
-      edges {
-        permission
-        node {
-          login
-        }
-      }
-    }
-  }
-}
-```
----
-
-class: nord-dark, middle, left
-
-### Who has access to this repo?
-
-```bash
-$ cat users.json | jq '.data.repository.collaborators.edges[].node.login' | wc -l
-46
-$ cat users.json | jq '.data.repository.collaborators.edges[].permission == "ADMIN"' | grep -c true
-7
-```
----
-
-
-class: nord-dark, middle, left
-
 ## Validation as data: GraphQL
 
 ---
@@ -925,31 +723,17 @@ class: nord-dark, middle, left
 
 class: nord-dark, middle, left
 
-### Schema validation protects the data
+### GraphQL types: Be specific about what you accept
 
-.eighty[![https-everywhere](images/three-tier.svg)]
-
----
-
-class: nord-dark, middle, left
-
-### Schema validation protects everything
-
-.eighty[![https-everywhere](images/three-tier-graphql.svg)]
+* String > Postal Code
+* String > ISBN
+* String > Social Insurance Number
 
 ---
 
 class: nord-dark, middle, left
 
-### Validate with your own data types
-
-.eighty[![https-everywhere](images/sin-schema.png)]
-
----
-
-class: nord-dark, middle, left
-
-### Validate with your own data types
+### Types keep invalid/malicious inputs out
 
 .eighty[![https-everywhere](images/graphql-sin.png)]
 
@@ -957,54 +741,9 @@ class: nord-dark, middle, left
 
 class: nord-dark, middle, left
 
-### When your schema is data, validations are observable
+### Schema is data: Types are visible from the outside
 
 .eighty[![https-everywhere](images/schema-as-data.png)]
-
----
-
-class: nord-dark, left, middle
-
-### When your schema is data, validations are auditable
-
-```bash
-$ npx graphql-attack-surface https://pulse.alpha.canada.ca/graphql
-
-
-findDomainsByOrg accepts the following string inputs:
-  before accepts a value of String
-  after accepts a value of String
-
-
-findMyDomains accepts the following string inputs:
-  before accepts a value of String
-  after accepts a value of String
-
-
-findMyOrganizations accepts the following string inputs:
-  before accepts a value of String
-  after accepts a value of String
-
-
-userList accepts the following string inputs:
-  before accepts a value of String
-  after accepts a value of String
-
-
-authenticateTwoFactor accepts the following string inputs:
-  otpCode accepts a value of String!
-
-```
-
----
-
-class: nord-dark, middle, left
-
-## When your schema is data, it can be visualized
-
----
-
-background-image: url(images/graphql-voyager.png)
 
 ---
 
@@ -1024,7 +763,7 @@ class: nord-dark, left, middle
 
 class: nord-dark, middle, left
 
-### * as data: A tour
+### * as data: The enabling conditions for automation
 
 * Platform: *data*
 * Infrastructure: *data*
@@ -1038,50 +777,21 @@ class: nord-dark, middle, left
 
 class: nord-dark, left, middle
 
-### We (GoC) need experiments like this
+### Pursuing data made everything better
 
-* Much of the security/compliance work could be automated...
-
---
-
-* ...if we choose tech/tools that fit the "* as data" paradigm
+* Reproducability: ~10 minute rebuild
+* Auditability: Git as governance
+* Security
+  * Fewer credentials in fewer places
+  * New security automation possibilities
 
 ---
 
 class: nord-dark, left, middle
 
-## Things we've learned
+### We (GoC) need experiments like this
 
-* Automation (security and otherwise) is built on data
-
---
-
-* Most things can be turned into data (via tech or platforms)
-
---
-
-* If data is public, analysis doesn't need special access
-
---
-
-* The gap between data and reality is fixable (docs/reality isn't)
-
----
-
-
-class: nord-dark, middle, left
-
-### 2 infinite loops, 0 configuration drift
-
-.eighty[![gitops](images/gitops2.svg)]
-
----
-
-class: nord-dark, middle, left
-
-### 2 infinite loops, 0 configuration drift
-
-.eighty[![gitops](images/gitops.svg)]
+* Walking this path means adopting tech/tools that fit the "* as data" paradigm
 
 ---
 
