@@ -4,6 +4,14 @@
   text-shadow: 0 0 20px #333;
 }
 
+pre {
+  margin-top: 1em;
+}
+
+.infinity {
+  font-size: 2em;
+}
+
 .sync {
     position: absolute;
     top: 9em;
@@ -12,13 +20,6 @@
 
 .remark-code-line-highlighted {
     background-color: #2e3440;
-}
-
-#there-are-patterns-in-the-work-of-service-delivery {
-  position: absolute;
-  top: 45%;
-  padding: 0 3em;
-  font-size: 2em;
 }
 
 ul li::before {
@@ -32,6 +33,7 @@ ul li::before {
 }
 
 img {
+  margin-top: 1em;
 	display: flex;
   margin-left: auto;
   margin-right: auto;

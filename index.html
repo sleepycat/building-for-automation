@@ -46,36 +46,55 @@ class: nord-dark, left, middle
 
 ---
 
+class: nord-dark, middle, left
+
+### The goal: Make security visible
+
+---
 
 class: nord-dark, middle, left
 
-## Automated answers about other peoples systems
+### Tracker gathers data
+
+* encryption settings
+* email security settings
+
+---
+
+class: nord-dark, middle, left
+
+### Things we can measure
 
 * Are TLS/DMARC settings for a domain "good"?
 * Are this/that group of domains "good"?
 * Are this/that group of domains trending towards "good"?
-* These answers are continuously updated
+* What is observably "good" now
 
 ---
 
 class: nord-dark, middle, left
 
-## Questions are limited by the data we can get
-
-* much of what the GoC cares about isn't visible from outside
-* We definitely don't want access to see it from the inside
+### We'd love to measure more
 
 ---
 
 class: nord-dark, middle, left
 
-## How can we enable automated answers about Tracker?
+### Getting data is hard
+
+* Some things are visible, but weren't designed to make it easy
+  * Encryption algorithms: 4 protocol versions x 163 ciphers = 652 connections
+* Some things aren't visible from the outside
+  * Service accounts
+  * Deployment region
+  * Versions (libraries/supporting software)
+* Knowledge of a system isn't all in one place (dev/ops/...)
 
 ---
 
 class: nord-dark, middle, left
 
-## Important decisions at multiple layers
+### Security information exists at every layer
 
 * Platform
 * Infrastructure
@@ -87,9 +106,15 @@ class: nord-dark, middle, left
 
 ---
 
+class: nord-dark, middle, left
+
+### How can we build Tracker to be "measurable"?
+
+---
+
 class: nord-dark, left, middle
 
-## Measurement requires data
+### Measurement requires data
 
 * Platform: *data*
 * Infrastructure: *data*
@@ -103,7 +128,7 @@ class: nord-dark, left, middle
 
 class: nord-dark, left, middle
 
-## * as data: A tour of Tracker
+### * as data: A tour of Tracker
 
 * Platform: *Kubernetes*
 * Infrastructure: *Config Connector*
@@ -121,19 +146,9 @@ class: nord-dark, center, middle
 
 ---
 
-class: nord-dark, left, middle
-
-## Infrastructure As Data: the other part
-
-> ...describing what your systems look like in simple machine readable data formats. *Have programs execute those data formats and ensure your infrastructure matches*.
-
-<cite>Michael DeHaan - founder of Ansible - O'Reilly Radar, 2013</cite>
-
----
-
 class: nord-dark, middle, left
 
-## Kubernetes
+### Kubernetes
 * provides a data format for describing your system
 * executes that data
 * ensures running system matches
@@ -143,7 +158,7 @@ class: nord-dark, middle, left
 
 class: nord-dark, left, middle
 
-## What ports *should* be exposed?
+### What ports *should* be exposed?
 
 ```bash
 $ git clone --depth 1 git@github.com:canada-ca/tracker.git && cd tracker
@@ -158,7 +173,7 @@ $ kustomize build platform/overlays/gke | \
 
 class: nord-dark, left, middle
 
-## What ports *are* exposed?
+### What ports *are* exposed?
 
 ```bash
 $ sudo nmap -p- --reason pulse.alpha.canada.ca
@@ -177,15 +192,27 @@ Nmap done: 1 IP address (1 host up) scanned in 191.39 seconds
 ```
 
 ---
+
 class: nord-dark, left, middle
 
-## Kubernetes: config is canonical
+### Kubernetes
+
+* *System* matches config
+* config is data (not code)
+* data can be analyzed
+* analysis can be automated
 
 ---
 
 class: nord-dark, left, middle
 
-## What services are running on our platform?
+### What kind of analysis?
+
+---
+
+class: nord-dark, left, middle
+
+### What services are running on our platform?
 
 ```bash
 $ kustomize build platform/overlays/gke |  yq 'select(.kind == "Service").metadata.name'
@@ -206,7 +233,7 @@ $ kustomize build platform/overlays/gke |  yq 'select(.kind == "Service").metada
 
 class: nord-dark, left, middle
 
-## What versions are running?
+### What versions are running?
 
 ```bash
 $ kustomize build platform/overlays/gke | \
@@ -236,167 +263,35 @@ class: nord-dark, middle, left
 
 class: nord-dark, middle, left
 
-## Kubernetes
-* provides a data format for describing your system
-* executes that data
-* ensures running system matches
+### Config Connector
 
-.sync.sixty[![](images/kubernetes-sync.svg)]
-
----
-
-class: nord-dark, middle, left
-
-## Config Connector
-* provides 91 resources describing GCP infrastructure
+* Describe GCP infra/services in Kubernetes data format
 * Extends Kubernetes to act on these new types
 
 .sync.sixty[![](images/config-connector-sync.svg)]
 
 ---
 
-class: nord-dark, middle, left
+class: nord-dark, left, middle
 
-## New additions to the Kubernetes world
+### Config Connector
 
-```yaml
-apiVersion: sql.cnrm.cloud.google.com/v1beta1
-kind: SQLInstance
-metadata:
-  name: sqluser-dep
-spec:
-  region: us-central1
-  databaseVersion: MYSQL_5_7
-  settings:
-    tier: db-n1-standard-1
-```
+* *Cloud* matches config
+* config is data (not code)
+* data can be analyzed
+* analysis can be automated
+
+---
+
+class: nord-dark, left, middle
+
+### What kind of analysis?
 
 ---
 
 class: nord-dark, middle, left
 
-## How many security/policy requirements apply?
-
-```yaml
-apiVersion: sql.cnrm.cloud.google.com/v1beta1
-kind: SQLInstance
-metadata:
-  name: sqluser-dep
-spec:
-  region: us-central1
-  databaseVersion: MYSQL_5_7
-  settings:
-    tier: db-n1-standard-1
-```
-
----
-
-class: nord-dark, middle, left
-
-## How many security/policy requirements apply?
-
-```yaml
-apiVersion: sql.cnrm.cloud.google.com/v1beta1
-kind: SQLInstance
-metadata:
-  name: sqluser-dep
-spec:
-*  region: us-central1
-  databaseVersion: MYSQL_5_7
-  settings:
-    tier: db-n1-standard-1
-```
-
----
-
-class: nord-dark, middle, left
-
-## How many security/policy requirements apply?
-
-```yaml
-apiVersion: sql.cnrm.cloud.google.com/v1beta1
-kind: SQLInstance
-metadata:
-  name: sqluser-dep
-spec:
-  region: us-central1
-*  databaseVersion: MYSQL_5_7
-  settings:
-    tier: db-n1-standard-1
-```
-
----
-
-class: nord-dark, middle, left
-
-## Mapping GoC requirements to 91 pieces of data is a tractable problem
-
----
-
-class: nord-dark, middle, left
-
-## Kubernetes
-
-```yaml
-# Our GKE cluster
-apiVersion: container.cnrm.cloud.google.com/v1beta1
-kind: ContainerCluster
-metadata:
-  annotations:
-    cnrm.cloud.google.com/remove-default-node-pool: "false"
-  name: tracker-two-dot-oh
-  namespace: tracker
-spec:
-  # Place this cluster in Montreal for data residency
-  # https://cloud.google.com/about/locations/montreal
-  location: northamerica-northeast1
-  initialNodeCount: 1
-  # Logs are centralized by default in Stackdriver
-  # Our least privilege account gives nodes permission to write to these
-  # logging and monitoring services
-  loggingService: logging.googleapis.com/kubernetes
-  monitoringService: monitoring.googleapis.com/kubernetes
-  masterAuth:
-    # No credentials here since nobody should log into master nodes
-    clientCertificateConfig:
-      issueClientCertificate: false
-  # Secrets are not currently encrypted within etcd
-  # databaseEncryption:
-  #   keyName: string
-  #   state: string
-  addonsConfig:
-    # Enable "Cloud Run for Anthos"
-    # We use this feature for the domain scanning
-    cloudrunConfig:
-      disabled: false
-  # Enable Workload Identity
-  workloadIdentityConfig:
-    identityNamespace: "track-compliance.svc.id.goog"
-  enableShieldedNodes: true
-  # Subscribe to a release channel so Kubernetes is auto-upgraded for us
-  releaseChannel: # immutable field
-    channel: REGULAR # RAPID, REGULAR, or STABLE
-  nodeConfig:
-    diskSizeGb: 100
-    # Node auto-upgrades are enabled by default
-    imageType: COS_CONTAINERD
-    machineType: n1-standard-4
-    diskType: pd-standard
-    shieldedInstanceConfig: # immutable fields
-      enableIntegrityMonitoring: true
-      enableSecureBoot: true
-    serviceAccountRef:
-      # Nodes should use our least privilege account
-      external: gke-least-privilege-account@track-compliance.iam.gserviceaccount.com
----
-```
-
----
-
-
-class: nord-dark, middle, left
-
-## NIST SP 800-190 guidance on Minimal OS?
+### NIST SP 800-190 guidance on Minimal OS?
 
 ```bash
 $ cat tracker.yaml | \
@@ -410,7 +305,7 @@ $ cat tracker.yaml | \
 
 class: nord-dark, middle, left
 
-## Security: Shielded nodes on GKE?
+### Shielded nodes on GKE?
 
 ```bash
 $ cat tracker.yaml | \
@@ -425,7 +320,7 @@ $ cat tracker.yaml | \
 
 class: nord-dark, middle, left
 
-## Security: Accounts and permissions
+### What service accounts are there?
 
 ```bash
 $ cat tracker.yaml | \
@@ -440,7 +335,7 @@ $ cat tracker.yaml | \
 
 class: nord-dark, middle, left
 
-## Security: permissions
+### What permissions do service accounts have?
 
 ```bash
 $ cat tracker.yaml | \
@@ -461,6 +356,130 @@ $ cat tracker.yaml | \
 ```
 
 ---
+
+class: nord-dark, middle, left
+
+### Where are service accounts used?
+
+```bash
+$ cat tracker.yaml | \
+ yq '{kind: .kind, serviceAccount: .spec.nodeConfig.serviceAccountRef.external} | select (.serviceAccount!=null)'
+{
+  "kind": "ContainerCluster",
+  "serviceAccount": "gke-least-privilege-account@track-compliance.iam.gserviceaccount.com"
+}
+
+```
+
+---
+
+class: nord-dark, middle, left
+
+## Automation possibilities
+
+---
+
+class: nord-dark, middle, left
+
+### How much do we need to ask?
+
+```yaml
+apiVersion: sql.cnrm.cloud.google.com/v1beta1
+* kind: SQLInstance
+metadata:
+  name: sqluser-dep
+spec:
+  region: northamerica-northeast1
+  databaseVersion: MYSQL_5_7
+  settings:
+    backupConfiguration:
+        enabled: true
+        binaryLogEnabled: true
+        startTime: "18:00"
+    ipConfiguration:
+      requireSsl: true
+    tier: db-n1-standard-1
+```
+
+---
+
+class: nord-dark, middle, left
+
+### How much do we need to ask?
+
+```yaml
+apiVersion: sql.cnrm.cloud.google.com/v1beta1
+kind: SQLInstance
+metadata:
+  name: sqluser-dep
+spec:
+*  region: northamerica-northeast1
+  databaseVersion: MYSQL_5_7
+  settings:
+    backupConfiguration:
+        enabled: true
+        binaryLogEnabled: true
+        startTime: "18:00"
+    ipConfiguration:
+      requireSsl: true
+    tier: db-n1-standard-1
+```
+
+---
+class: nord-dark, middle, left
+
+### How much do we need to ask?
+
+```yaml
+apiVersion: sql.cnrm.cloud.google.com/v1beta1
+kind: SQLInstance
+metadata:
+  name: sqluser-dep
+spec:
+  region: northamerica-northeast1
+  databaseVersion: MYSQL_5_7
+  settings:
+*    backupConfiguration:
+*        enabled: true
+        binaryLogEnabled: true
+        startTime: "18:00"
+    ipConfiguration:
+      requireSsl: true
+    tier: db-n1-standard-1
+```
+
+---
+
+class: nord-dark, middle, left
+
+### How much do we need to ask?
+
+```yaml
+apiVersion: sql.cnrm.cloud.google.com/v1beta1
+kind: SQLInstance
+metadata:
+  name: sqluser-dep
+spec:
+  region: northamerica-northeast1
+  databaseVersion: MYSQL_5_7
+  settings:
+    backupConfiguration:
+        enabled: true
+        binaryLogEnabled: true
+        startTime: "18:00"
+    ipConfiguration:
+*      requireSsl: true
+    tier: db-n1-standard-1
+```
+
+---
+
+class: nord-dark, middle, left
+
+### Could we map data types & properties to ITSG 33 controls?
+
+---
+
 
 class: nord-dark, middle, left
 
@@ -490,49 +509,36 @@ class: nord-dark, middle, left
 
 class: nord-dark, middle, left
 
-# GitHub ~~the code hosting service~~
+## GitHub ~~the code hosting service~~
 
 ---
 
 class: nord-dark, middle, left
 
-# GitHub the platform
-
----
-
-class: nord-dark, left, middle
-
-## Platform?
-
-> A platform abstracts away a messy problem so you can build on top of it.
-
-<cite>Sam Ghods -- CoFounder of Box</cite>
+## GitHub the platform
 
 ---
 
 class: nord-dark, middle, left
 
-## GitHub does more than host your code
+### GitHub the platform
 
-* it understands languages
-* it understands common dependency manifests
-* it looks for vulnerable dependencies
-* recognizes cloud credentials
-* it records actions taken (opening/closing issues/PRs)
-* makes all of this available as data via it's API
+* understands the code it's hosting
+* records actions taken (opening/closing issues/PRs)
+* makes everything available as data via it's API
 
 ---
 
 
 class: nord-dark, middle, left
 
-# Languages as data: GitHub API
+### Languages as data: GitHub API
 
 ---
 
 class: nord-dark, middle, left
 
-# Languages matter for security
+### Languages matter for security
 * "Microsoft has deemed C++ no longer acceptable for writing mission-critical software."[1]
 * JavaScript has language level SQL injection prevention
 * Golang:	CVE-2019-14809 net/url authorization bypass
@@ -544,7 +550,7 @@ class: nord-dark, middle, left
 
 class: nord-dark, middle, left
 
-## What programming languages are used?
+### What programming languages are used?
 
 ```graphql
 {
@@ -597,13 +603,13 @@ class: nord-dark, middle, left
 
 class: nord-dark, middle, left
 
-## Dependencies as data: GitHub API
+### Dependencies as data: GitHub API
 
 ---
 
 class: nord-dark, middle, left
 
-## Dependencies matter for security
+### Dependencies matter for security
 
 > OSS Components Make Up 90% of a Modern Application
 
@@ -613,7 +619,7 @@ class: nord-dark, middle, left
 
 class: nord-dark, middle, left
 
-## What dependencies does this project have?
+### What dependencies does this project have?
 
 ```graphql
 {
@@ -672,7 +678,7 @@ class: nord-dark, middle, left
 
 class: nord-dark, middle, left
 
-## Bonus: Vulnerabilities as data!
+### Bonus: Vulnerabilities as data!
 (PHP, Java, .NET, Python, Ruby, JavaScript)
 
 ```graphql
@@ -711,16 +717,15 @@ class: nord-dark, middle, left
 
 ---
 
-
 class: nord-dark, middle, left
 
-# Workflow as data
+## Workflow as data
 
 ---
 
 class: nord-dark, middle, left
 
-## Who are the "outside collaborators" on this repo?
+### Who is working on this repo?
 
 ```graphql
 {
@@ -740,7 +745,7 @@ class: nord-dark, middle, left
 
 class: nord-dark, middle, left
 
-## Who are the "outside collaborators" on this repo?
+### Who is working on this repo?
 
 ```json
 {
@@ -803,39 +808,7 @@ class: nord-dark, middle, left
 
 class: nord-dark, middle, left
 
-## Who has admin access to this repo?
-
-```graphql
-{
-  repository(owner: "canada-ca", name: "tracker") {
-    collaborators(first: 50 affiliation: ALL) {
-      edges {
-        permission
-        node {
-          login
-        }
-      }
-    }
-  }
-}
-```
----
-
-class: nord-dark, middle, left
-
-## Who has access to this repo?
-
-```bash
-$ cat users.json | jq '.data.repository.collaborators.edges[].node.login' | wc -l
-46
-$ cat users.json | jq '.data.repository.collaborators.edges[].permission == "ADMIN"' | grep -c true
-7
-```
----
-
-class: nord-dark, middle, left
-
-## Are we doing code review?
+### Are we doing code review?
 
 ```graphql
 {
@@ -905,13 +878,54 @@ class: nord-dark, middle, left
 
 class: nord-dark, middle, left
 
-# Validation as data: GraphQL
+### Bonus: Who has admin access to this repo?
+
+```graphql
+{
+  repository(owner: "canada-ca", name: "tracker") {
+    collaborators(first: 50 affiliation: ALL) {
+      edges {
+        permission
+        node {
+          login
+        }
+      }
+    }
+  }
+}
+```
+---
+
+class: nord-dark, middle, left
+
+### Who has access to this repo?
+
+```bash
+$ cat users.json | jq '.data.repository.collaborators.edges[].node.login' | wc -l
+46
+$ cat users.json | jq '.data.repository.collaborators.edges[].permission == "ADMIN"' | grep -c true
+7
+```
+---
+
+
+class: nord-dark, middle, left
+
+## Validation as data: GraphQL
 
 ---
 
 class: nord-dark, middle, left
 
-## Schema validation protects the data
+### A language for your API
+
+.eighty[![graphql](images/graphql.svg)]
+
+---
+
+class: nord-dark, middle, left
+
+### Schema validation protects the data
 
 .eighty[![https-everywhere](images/three-tier.svg)]
 
@@ -919,7 +933,7 @@ class: nord-dark, middle, left
 
 class: nord-dark, middle, left
 
-## Schema validation protects everything
+### Schema validation protects everything
 
 .eighty[![https-everywhere](images/three-tier-graphql.svg)]
 
@@ -927,7 +941,7 @@ class: nord-dark, middle, left
 
 class: nord-dark, middle, left
 
-## Validate with your own data types
+### Validate with your own data types
 
 .eighty[![https-everywhere](images/sin-schema.png)]
 
@@ -935,7 +949,7 @@ class: nord-dark, middle, left
 
 class: nord-dark, middle, left
 
-## Validate with your own data types
+### Validate with your own data types
 
 .eighty[![https-everywhere](images/graphql-sin.png)]
 
@@ -996,7 +1010,7 @@ background-image: url(images/graphql-voyager.png)
 
 class: nord-dark, left, middle
 
-## * as data: A tour
+### * as data: A tour
 
 * Platform: *Kubernetes*
 * Infrastructure: *Config Connector*
@@ -1010,7 +1024,7 @@ class: nord-dark, left, middle
 
 class: nord-dark, middle, left
 
-# Building this way is enabling automation
+### * as data: A tour
 
 * Platform: *data*
 * Infrastructure: *data*
@@ -1024,27 +1038,35 @@ class: nord-dark, middle, left
 
 class: nord-dark, left, middle
 
-## Things we've learned
+### We (GoC) need experiments like this
 
-* Automation (security and otherwise) is built on data
-
---
-
-* Most things can be turned into data (via tech or platforms)
+* Much of the security/compliance work could be automated...
 
 --
 
-* If data is public, analysis doesn't need special access
-
---
-
-* The gap between documents and reality is a problem
-
---
-
-* The gap between data and reality is fixable
+* ...if we choose tech/tools that fit the "* as data" paradigm
 
 ---
+
+class: nord-dark, left, middle
+
+## We (security) need experiments like this
+
+* Dev: 🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈<br/>
+* Ops: 🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈
+* Sec: 🐈
+
+---
+
 
 class: nord-dark, middle, left
 
@@ -1064,34 +1086,24 @@ class: nord-dark, middle, left
 
 class: nord-dark, left, middle
 
-## More things we've learned
+## Things we've learned
 
-* Much of the security/compliance work could be automated...
+* Automation (security and otherwise) is built on data
 
 --
 
-* ...if dev/ops choose tech/tools that fit the "* as data" paradigm
+* Most things can be turned into data (via tech or platforms)
+
+--
+
+* If data is public, analysis doesn't need special access
+
+--
+
+* The gap between data and reality is fixable (docs/reality isn't)
 
 ---
 
-class: nord-dark, left, middle
-
-## We need experiments like this
-
-* Dev: 🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈<br/>
-* Ops: 🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈
-* Sec: 🐈
-
----
 
 class: nord-dark, middle, center
 
