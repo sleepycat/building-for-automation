@@ -129,9 +129,9 @@ class: nord-dark, center, middle
 class: nord-dark, middle, left
 
 ### Kubernetes
-* provides a data format for describing your system
-* executes that data
-* ensures running system matches
+* describe your system with data
+* executes that description
+* *ensures system never deviates from the description*
 
 .sync.sixty[![](images/kubernetes-sync.svg)]
 
@@ -215,6 +215,20 @@ $ kustomize build platform/overlays/gke | \
 
 class: nord-dark, left, middle
 
+### Analysis: What ports *should* be exposed?
+
+```bash
+$ git clone --depth 1 git@github.com:canada-ca/tracker.git && cd tracker
+$ kustomize build platform/overlays/gke | \
+>   yq 'select(.kind == "Service" and .spec.type == "LoadBalancer").spec.ports[].port'
+80
+443
+```
+
+---
+
+class: nord-dark, left, middle
+
 ### Analysis: What ports *are* exposed?
 
 ```bash
@@ -239,7 +253,7 @@ class: nord-dark, middle, left
 
 ### Why that works
 * Data is on GitHub
-* Changes flow through.
+* Changes flow through
 
 .gitops.sixty[![gitops](images/gitops2.svg)]
 
@@ -247,7 +261,7 @@ class: nord-dark, middle, left
 
 class: nord-dark, middle, left
 
-### Bringing ideas to the infrastructure layer...
+### Bringing these ideas to the infrastructure layer...
 
 ---
 
@@ -267,6 +281,7 @@ class: nord-dark, middle, left
 .sync.sixty[![](images/config-connector-sync.svg)]
 
 ---
+
 class: nord-dark, middle, left
 
 ### GCP services as data
@@ -293,32 +308,31 @@ spec:
 
 class: nord-dark, middle, left
 
-### Infrastructure as Data enables analysis
+### Operations: How long to rebuild from scratch?
 
-```bash
-$ cat tracker.yaml | \
- yq 'select(.kind == "IAMPolicyMember").spec | {role, member} | select(.member | contains("serviceAccount"))'
-{
-  "role": "roles/logging.logWriter",
-  "member": "serviceAccount:gke-least-privilege-account@track-compliance.iam.gserviceaccount.com"
-}
-{
-  "role": "roles/monitoring.metricWriter",
-  "member": "serviceAccount:gke-least-privilege-account@track-compliance.iam.gserviceaccount.com"
-}
-{
-  "role": "roles/monitoring.viewer",
-  "member": "serviceAccount:gke-least-privilege-account@track-compliance.iam.gserviceaccount.com"
-}
-
+```yaml
+apiVersion: sql.cnrm.cloud.google.com/v1beta1
+* kind: SQLInstance
+metadata:
+  name: sqluser-dep
+spec:
+  region: northamerica-northeast1
+  databaseVersion: MYSQL_5_7
+  settings:
+    backupConfiguration:
+        enabled: true
+        binaryLogEnabled: true
+        startTime: "18:00"
+    ipConfiguration:
+      requireSsl: true
+    tier: db-n1-standard-1
 ```
 
 ---
 
-
 class: nord-dark, middle, left
 
-### Data is the new documentation
+### Analysis: Meets data residency requirements?
 
 ```yaml
 apiVersion: sql.cnrm.cloud.google.com/v1beta1
@@ -339,9 +353,10 @@ spec:
 ```
 
 ---
+
 class: nord-dark, middle, left
 
-### Data is the new documentation
+### Analysis: Are backups getting done?
 
 ```yaml
 apiVersion: sql.cnrm.cloud.google.com/v1beta1
@@ -365,7 +380,7 @@ spec:
 
 class: nord-dark, middle, left
 
-### Data is the new documentation
+### Security: Encryption in transit?
 
 ```yaml
 apiVersion: sql.cnrm.cloud.google.com/v1beta1
@@ -389,9 +404,10 @@ spec:
 
 class: nord-dark, middle, left
 
-### 2 infinite loops, 0 configuration drift
+### Data is the new documentation
+* We can ensure this documentation reflects reality
 
-.eighty[![gitops](images/gitops.svg)]
+.gitopscc.eighty[![gitops](images/gitops.svg)]
 
 ---
 
@@ -399,8 +415,8 @@ class: nord-dark, middle, left
 
 ## * as data: A tour
 
-* Platform: *Kubernetes*
-* Infrastructure: *Config Connector*
+* ~~Platform: *Kubernetes*~~
+* ~~Infrastructure: *Config Connector*~~
 * Languages: *GitHub API*
 * Dependencies: *GitHub API*
 * Workflow (who, and how): *GitHub API*
@@ -411,13 +427,27 @@ class: nord-dark, middle, left
 
 class: nord-dark, middle, left
 
-### Enabling automated analysis brought us operational benefits
+### Choosing technologies that fit the "* as data" model
+* Enabled automated analysis
+* Brought operational benefits
+* Eliminated configuration drift
 
 ---
 
 class: nord-dark, middle, left
 
-### Where we do the work can give us access to more data
+### Where we do the work can give us more data
+* Languages
+* Dependencies
+* Workflow (who, and how)
+
+---
+
+class: nord-dark, middle, left
+
+## GitHub the code hosting service
+* All our "* as data" can be hosted there
+* Public data means analysis without special access
 
 ---
 
@@ -429,17 +459,11 @@ class: nord-dark, middle, left
 
 class: nord-dark, middle, left
 
-## GitHub the platform
-
----
-
-class: nord-dark, middle, left
-
 ### GitHub the platform
 
-* understands the code it's hosting
-* records actions taken (opening/closing issues/PRs)
-* makes everything available as data via it's API
+* Understands the code it's hosting
+* Records actions taken (opening/closing issues/PRs)
+* *Represents everything on GitHub as data* via it's API
 
 ---
 
@@ -455,11 +479,11 @@ class: nord-dark, middle, left
 * "Microsoft has deemed C++ no longer acceptable for writing mission-critical software."[1]
 * JavaScript has language level SQL injection prevention
 * Golang:	CVE-2019-14809 net/url authorization bypass
-* Rust 😍
+* Rust: Amazon choice for security sensitive projects: FireCracker VM & BottleRocket OS
 
 <cite>[1] https://thenewstack.io/microsoft-rust-is-the-industrys-best-chance-at-safe-systems-programming/</cite>
----
 
+---
 
 class: nord-dark, middle, left
 
@@ -589,7 +613,6 @@ class: nord-dark, middle, left
 ```
 
 ---
-
 class: nord-dark, middle, left
 
 ### Bonus: Vulnerabilities as data!
@@ -630,6 +653,8 @@ class: nord-dark, middle, left
 ```
 
 ---
+
+
 
 class: nord-dark, middle, left
 
@@ -709,6 +734,59 @@ class: nord-dark, middle, left
 
 class: nord-dark, middle, left
 
+### List each repos last commit to find unmaintained code
+
+```graphql
+{
+  organization(login: "canada-ca") {
+    repositories(first: 3) {
+      nodes {
+        nameWithOwner
+        ref(qualifiedName: "master") {
+          target {
+            ... on Commit {
+              pushedDate
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+---
+
+class: nord-dark, middle, left
+
+### GitHub
+
+* Analysis: API Renders everything on GitHub as data!
+  * Project catalog
+  * Commit activity (maintenance)
+  * Languages
+  * Dependencies
+  * Workflow
+  * Who's involved
+  * Project vulnerabilities!
+  * Project metadata
+
+---
+class: nord-dark, middle, left
+
+### GitHub
+
+* Security
+  * Vulnerability scanning by default! (PHP, Java, .NET, Python, Ruby, JavaScript)
+  * Valuable data on what's out there and where to focus
+* Operations
+  * Seamless collaboration with Cybercenter & students
+  * Integration with other services (Cloudbuild)
+
+---
+
+
+class: nord-dark, middle, left
+
 ## Validation as data: GraphQL
 
 ---
@@ -733,7 +811,7 @@ class: nord-dark, middle, left
 
 class: nord-dark, middle, left
 
-### Types keep invalid/malicious inputs out
+### Being specific (via types) keeps invalid/malicious inputs out
 
 .eighty[![https-everywhere](images/graphql-sin.png)]
 
@@ -741,7 +819,7 @@ class: nord-dark, middle, left
 
 class: nord-dark, middle, left
 
-### Schema is data: Types are visible from the outside
+### Types are data: "being specific" is now visible from the outside
 
 .eighty[![https-everywhere](images/schema-as-data.png)]
 
@@ -775,6 +853,19 @@ class: nord-dark, middle, left
 
 ---
 
+class: nord-dark, middle, left
+
+### Dual use: operationally useful means analytically useful
+* Platform: *data*
+* Infrastructure: *data*
+* Languages: *data*
+* Dependencies: *data*
+* Workflow (who, and how): *data*
+* Inputs & validation: *data*
+* Application code: ?
+
+---
+
 class: nord-dark, left, middle
 
 ### Pursuing data made everything better
@@ -784,37 +875,21 @@ class: nord-dark, left, middle
 * Security
   * Fewer credentials in fewer places
   * New security automation possibilities
+* Operations: better, faster, safer
 
 ---
 
 class: nord-dark, left, middle
 
-### We (GoC) need experiments like this
+### It's a big ask
 
-* Walking this path means adopting tech/tools that fit the "* as data" paradigm
-
----
-
-class: nord-dark, left, middle
-
-## We (security) need experiments like this
-
-* Dev: 🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈<br/>
-* Ops: 🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈
-* Sec: 🐈
+* Need cloud access, ability to install new tech/tools
+* Lots of learning went into this
+  * Different paradigm
+  * Takes time
+  * "Doing it wrong" comes before "doing it right"
 
 ---
-
-
 
 class: nord-dark, middle, center
 

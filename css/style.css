@@ -18,6 +18,12 @@ pre {
     left: 22em;
 }
 
+.gitopscc {
+    position: absolute;
+    top: 11em;
+    left: 28em;
+}
+
 .sync {
     position: absolute;
     top: 9em;
