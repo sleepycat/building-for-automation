@@ -54,16 +54,7 @@ class: nord-dark, middle, left
 
 class: nord-dark, middle, left
 
-### Tracker gathers data
-
-* encryption settings
-* email security settings
-
----
-
-class: nord-dark, middle, left
-
-### Things we can measure
+### Tracker's data gives certain answers
 
 * Are TLS/DMARC settings for a domain "good"?
 * Are this/that group of domains "good"?
@@ -108,7 +99,13 @@ class: nord-dark, left, middle
 
 class: nord-dark, left, middle
 
-### * as data: Tracker as a testbed
+### What would it take for Tracker to analyze itself?
+
+---
+
+class: nord-dark, left, middle
+
+### Tracker as a testbed: * as data
 
 * Platform: *Kubernetes*
 * Infrastructure: *Config Connector*
@@ -137,8 +134,8 @@ class: nord-dark, middle, left
 
 ---
 
-
 class: nord-dark, middle, left
+
 
 ```yaml
 apiVersion: apps/v1
@@ -168,40 +165,35 @@ spec:
 
 class: nord-dark, left, middle
 
-### What representing our platform as data gets us
-
-* operational wins
-* data for analysis
+### When system descriptions are YAML
+* Data for analysis
+* Simplified operations
 
 ---
 
 class: nord-dark, left, middle
 
-### Operations: Deployments are just changing data
+### Operations
 
-```bash
-     name: gcr.io/track-compliance/frontend
-* -   newTag: master-d07b6e0
-* +   newTag: master-d55eaad
+#### Deployment
+
+```yaml
+  -     - image: gcr.io/track-compliance/frontend:master-320b5fd
+* +     - image: gcr.io/track-compliance/frontend:master-d07b6e0
+```
+
+#### Rollback
+
+```yaml
+* +     - image: gcr.io/track-compliance/frontend:master-320b5fd
+  -     - image: gcr.io/track-compliance/frontend:master-d07b6e0
 ```
 
 ---
 
 class: nord-dark, left, middle
 
-### Operations: Rollbacks are just changing data
-
-```bash
-     name: gcr.io/track-compliance/frontend
-* +   newTag: master-d07b6e0
-* -   newTag: master-d55eaad
-```
-
----
-
-class: nord-dark, left, middle
-
-### Analysis: What ports *should* be exposed?
+### Analysis: Config on GitHub says...
 
 ```bash
 $ git clone --depth 1 git@github.com:canada-ca/tracker.git && cd tracker
@@ -215,21 +207,7 @@ $ kustomize build platform/overlays/gke | \
 
 class: nord-dark, left, middle
 
-### Analysis: What ports *should* be exposed?
-
-```bash
-$ git clone --depth 1 git@github.com:canada-ca/tracker.git && cd tracker
-$ kustomize build platform/overlays/gke | \
->   yq 'select(.kind == "Service" and .spec.type == "LoadBalancer").spec.ports[].port'
-80
-443
-```
-
----
-
-class: nord-dark, left, middle
-
-### Analysis: What ports *are* exposed?
+### Analysis: System on Google Cloud shows
 
 ```bash
 $ sudo nmap -p- --reason pulse.alpha.canada.ca
@@ -251,7 +229,7 @@ Nmap done: 1 IP address (1 host up) scanned in 191.39 seconds
 
 class: nord-dark, middle, left
 
-### Why that works
+### Why this works
 * Data is on GitHub
 * Changes flow through
 
@@ -284,7 +262,7 @@ class: nord-dark, middle, left
 
 class: nord-dark, middle, left
 
-### GCP services as data
+### Hosted SQL database "as data"
 
 ```yaml
 apiVersion: sql.cnrm.cloud.google.com/v1beta1
@@ -308,11 +286,18 @@ spec:
 
 class: nord-dark, middle, left
 
-### Operations: How long to rebuild from scratch?
+
+### When our description is YAML...
+
+---
+
+class: nord-dark, middle, left
+
+### Business Continuity: How long to rebuild from scratch?
 
 ```yaml
 apiVersion: sql.cnrm.cloud.google.com/v1beta1
-* kind: SQLInstance
+ kind: SQLInstance
 metadata:
   name: sqluser-dep
 spec:
@@ -332,7 +317,7 @@ spec:
 
 class: nord-dark, middle, left
 
-### Analysis: Meets data residency requirements?
+### Policy: Meets data residency requirements?
 
 ```yaml
 apiVersion: sql.cnrm.cloud.google.com/v1beta1
@@ -356,7 +341,7 @@ spec:
 
 class: nord-dark, middle, left
 
-### Analysis: Are backups getting done?
+### Operations: Are backups getting done?
 
 ```yaml
 apiVersion: sql.cnrm.cloud.google.com/v1beta1
@@ -404,7 +389,16 @@ spec:
 
 class: nord-dark, middle, left
 
-### Data is the new documentation
+### Unlike Word Docs, data is dual use
+* Always up to date because it's needed for operations
+* YAML is human readable, supporting manual analysis
+* YAML is machine readable supporting automated analysis
+
+---
+
+class: nord-dark, middle, left
+
+### Data as documentation
 * We can ensure this documentation reflects reality
 
 .gitopscc.eighty[![gitops](images/gitops.svg)]
@@ -417,11 +411,10 @@ class: nord-dark, middle, left
 
 * ~~Platform: *Kubernetes*~~
 * ~~Infrastructure: *Config Connector*~~
-* Languages: *GitHub API*
-* Dependencies: *GitHub API*
-* Workflow (who, and how): *GitHub API*
-* Inputs & validation: *GraphQL*
-* Application code: ? (CodeQL?)
+* Languages
+* Dependencies
+* Workflow (who, and how)
+* Inputs & validation
 
 ---
 
@@ -477,9 +470,9 @@ class: nord-dark, middle, left
 
 ### Languages matter for security
 * "Microsoft has deemed C++ no longer acceptable for writing mission-critical software."[1]
-* JavaScript has language level SQL injection prevention
-* Golang:	CVE-2019-14809 net/url authorization bypass
-* Rust: Amazon choice for security sensitive projects: FireCracker VM & BottleRocket OS
+* JavaScript: language level SQL injection prevention
+* Golang: Minimalist deployments, tiny attack surface
+* Rust: Amazon's choice for security sensitive projects: FireCracker VM & BottleRocket OS
 
 <cite>[1] https://thenewstack.io/microsoft-rust-is-the-industrys-best-chance-at-safe-systems-programming/</cite>
 
@@ -654,8 +647,6 @@ class: nord-dark, middle, left
 
 ---
 
-
-
 class: nord-dark, middle, left
 
 ## Workflow as data
@@ -664,7 +655,7 @@ class: nord-dark, middle, left
 
 class: nord-dark, middle, left
 
-### Are we doing code review?
+### Peer review
 
 ```graphql
 {
@@ -734,7 +725,7 @@ class: nord-dark, middle, left
 
 class: nord-dark, middle, left
 
-### List each repos last commit to find unmaintained code
+### Finding unmaintained code with the data from the last commit
 
 ```graphql
 {
@@ -760,27 +751,8 @@ class: nord-dark, middle, left
 
 ### GitHub
 
-* Analysis: API Renders everything on GitHub as data!
-  * Project catalog
-  * Commit activity (maintenance)
-  * Languages
-  * Dependencies
-  * Workflow
-  * Who's involved
-  * Project vulnerabilities!
-  * Project metadata
-
----
-class: nord-dark, middle, left
-
-### GitHub
-
-* Security
-  * Vulnerability scanning by default! (PHP, Java, .NET, Python, Ruby, JavaScript)
-  * Valuable data on what's out there and where to focus
-* Operations
-  * Seamless collaboration with Cybercenter & students
-  * Integration with other services (Cloudbuild)
+* API renders everything on GitHub as data!
+* Valuable data on what's out there and where to focus (depending on usage)
 
 ---
 
@@ -816,18 +788,50 @@ class: nord-dark, middle, left
 .eighty[![https-everywhere](images/graphql-sin.png)]
 
 ---
-
 class: nord-dark, middle, left
 
-### Types are data: "being specific" is now visible from the outside
+### GraphQL describes itself (inputs and outputs) as data
 
 .eighty[![https-everywhere](images/schema-as-data.png)]
 
 ---
 
+class: nord-dark, middle, left
+
+### Safe input handling is now auditable from the outside
+
+```bash
+$ npx graphql-attack-surface https://pulse.alpha.canada.ca/graphql
+
+
+findDomainsByOrg accepts the following string inputs:
+  before accepts a value of String
+  after accepts a value of String
+
+...
+
+authenticateTwoFactor accepts the following string inputs:
+  otpCode accepts a value of String!
+```
+
+---
+
+class: nord-dark, middle, left
+
+### What would it take for Tracker to analyze itself?
+
+* Platform: *data*
+* Infrastructure: *data*
+* Languages: *data*
+* Dependencies: *data*
+* Workflow (who, and how): *data*
+* Inputs & validation: *data*
+
+---
+
 class: nord-dark, left, middle
 
-### * as data: A tour
+### The enabling conditions for automation
 
 * Platform: *Kubernetes*
 * Infrastructure: *Config Connector*
@@ -835,59 +839,31 @@ class: nord-dark, left, middle
 * Dependencies: *GitHub API*
 * Workflow (who, and how): *GitHub API*
 * Inputs & validation: *GraphQL*
-* Application code: ? (CodeQL?)
-
----
-
-class: nord-dark, middle, left
-
-### * as data: The enabling conditions for automation
-
-* Platform: *data*
-* Infrastructure: *data*
-* Languages: *data*
-* Dependencies: *data*
-* Workflow (who, and how): *data*
-* Inputs & validation: *data*
-* Application code: ?
-
----
-
-class: nord-dark, middle, left
-
-### Dual use: operationally useful means analytically useful
-* Platform: *data*
-* Infrastructure: *data*
-* Languages: *data*
-* Dependencies: *data*
-* Workflow (who, and how): *data*
-* Inputs & validation: *data*
-* Application code: ?
 
 ---
 
 class: nord-dark, left, middle
 
-### Pursuing data made everything better
+### Pursuing data benefited other areas
 
 * Reproducability: ~10 minute rebuild
 * Auditability: Git as governance
 * Security
   * Fewer credentials in fewer places
   * New security automation possibilities
-* Operations: better, faster, safer
+  * Lots more
+* Operations: better, safer, faster
 
 ---
 
 class: nord-dark, left, middle
 
-### It's a big ask
+### We need experiments like this
 
-* Need cloud access, ability to install new tech/tools
-* Lots of learning went into this
-  * Different paradigm
-  * Takes time
-  * "Doing it wrong" comes before "doing it right"
+* Security automation
+  * aimed at resolving the safety/speed tradeoff
+  * Security is part of every project, but security people can't be
+* Shipping shouldn't mean accepting a tonne of risk
 
 ---
 
