@@ -67,9 +67,6 @@ class: nord-dark, middle, left
 
 ### We'd love to measure more
 
-* We're limited to what we can see from the outside
-* We're limited by the data we can get
-
 ---
 
 class: nord-dark, middle, left
@@ -852,12 +849,26 @@ authenticateTwoFactor accepts the following string inputs:
 ```
 
 ---
+class: nord-dark, center, middle, title
+
+.logo[🤖]
+
+# Building for automation
+
+---
 
 class: nord-dark, middle, left
 
 ### Can we build Tracker so that it can been analyzed?
 
 * More than we thought!
+* Everything from service accounts to input validation is visible from the outside
+
+---
+
+class: nord-dark, left, middle
+
+### Tracker is now data that can be input to some other process
 
 ---
 
@@ -867,21 +878,9 @@ class: nord-dark, left, middle
 
 * Reproducability: ~10 minute rebuild
 * Auditability: Git as governance
-* Security
-  * Fewer credentials in fewer places
-  * New security automation possibilities
-  * Lots more
+* Security: Fewer credentials in fewer places (CI, assurance)
+* Observability: at runtime
 * Operations: better, safer, faster
-
----
-
-class: nord-dark, left, middle
-
-### One Weird Trick! GitHub
-
-* Biggest bang for the buck
-* Unlocks a tonne of data
-* Vulnerability scanning by default!
 
 ---
 
@@ -896,6 +895,20 @@ class: nord-dark, left, middle
 * Dependencies: *GitHub API*
 * Workflow (who, and how): *GitHub API*
 * Inputs & validation: *GraphQL*
+
+---
+
+class: nord-dark, left, middle
+
+### One Weird Trick! GitHub
+
+* Biggest bang for the buck
+* Great for devs:
+  * productivity
+  * collaboration
+* Great for security:
+  * Unlocks a tonne of data
+  * Vulnerability scanning by default!
 
 ---
 
