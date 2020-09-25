@@ -78,8 +78,8 @@ class: nord-dark, middle, left
 * Languages
 * Dependencies
 * Workflow (who, and how)
-* Inputs & validation
 * Application code
+* Inputs & validation
 
 ---
 
@@ -92,8 +92,8 @@ class: nord-dark, left, middle
 * Languages: *data*
 * Dependencies: *data*
 * Workflow (who, and how): *data*
+* Application code: *data*
 * Inputs & validation: *data*
-* Application code: ?
 
 ---
 
@@ -112,8 +112,8 @@ class: nord-dark, left, middle
 * Languages: *GitHub API*
 * Dependencies: *GitHub API*
 * Workflow (who, and how): *GitHub API*
-* Inputs & validation: *GraphQL*
 * Application code: ? (CodeQL?)
+* Inputs & validation: *GraphQL*
 
 ---
 
@@ -414,6 +414,7 @@ class: nord-dark, middle, left
 * Languages
 * Dependencies
 * Workflow (who, and how)
+* Application code
 * Inputs & validation
 
 ---
@@ -749,13 +750,39 @@ class: nord-dark, middle, left
 
 class: nord-dark, middle, left
 
-### GitHub
+### Application code as data: CodeQL
 
-* API renders everything on GitHub as data!
-* Valuable data on what's out there and where to focus (depending on usage)
+```sql
+import javascript
+
+from Function f
+where f.getNumParameter() > 5
+select f
+```
+---
+
+class: nord-dark, middle, left
+
+### CodeQL: SQL for querying code
+
+```sql
+import javascript
+
+from Function f
+where f.getNumParameter() > 5
+select f
+```
 
 ---
 
+class: nord-dark, middle, left
+
+### GitHub
+
+* API transforms everything on GitHub into data!
+* Valuable data on what's out there and where to focus (depending on usage)
+
+---
 
 class: nord-dark, middle, left
 
@@ -788,6 +815,17 @@ class: nord-dark, middle, left
 .eighty[![https-everywhere](images/graphql-sin.png)]
 
 ---
+
+class: nord-dark, middle, left
+
+### We don't know how most of our system will react to invalid inputs
+
+> OSS Components Make Up 90% of a Modern Application
+
+<cite>Sonatype's 2020 State of Software Supply Chain.</cite>
+
+---
+
 class: nord-dark, middle, left
 
 ### GraphQL describes itself (inputs and outputs) as data
