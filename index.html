@@ -67,6 +67,9 @@ class: nord-dark, middle, left
 
 ### We'd love to measure more
 
+* We're limited to what we can see from the outside
+* We're limited by the data we can get
+
 ---
 
 class: nord-dark, middle, left
@@ -99,7 +102,10 @@ class: nord-dark, left, middle
 
 class: nord-dark, left, middle
 
-### What would it take for Tracker to analyze itself?
+### Can we build Tracker so that it can been analyzed?
+
+* Make the "behind the scenes" stuff visible?
+* Make it easy to answer "are we vulnerable"?
 
 ---
 
@@ -856,27 +862,9 @@ authenticateTwoFactor accepts the following string inputs:
 
 class: nord-dark, middle, left
 
-### What would it take for Tracker to analyze itself?
+### Can we build Tracker so that it can been analyzed?
 
-* Platform: *data*
-* Infrastructure: *data*
-* Languages: *data*
-* Dependencies: *data*
-* Workflow (who, and how): *data*
-* Inputs & validation: *data*
-
----
-
-class: nord-dark, left, middle
-
-### The enabling conditions for automation
-
-* Platform: *Kubernetes*
-* Infrastructure: *Config Connector*
-* Languages: *GitHub API*
-* Dependencies: *GitHub API*
-* Workflow (who, and how): *GitHub API*
-* Inputs & validation: *GraphQL*
+* More than we thought!
 
 ---
 
@@ -896,11 +884,36 @@ class: nord-dark, left, middle
 
 class: nord-dark, left, middle
 
+### One Weird Trick! GitHub
+
+* Biggest bang for the buck
+* Unlocks a tonne of data
+* Vulnerability scanning by default!
+
+---
+
+class: nord-dark, left, middle
+
+### The enabling conditions for automation
+### The ingredients for a new process
+
+* Platform: *Kubernetes*
+* Infrastructure: *Config Connector*
+* Languages: *GitHub API*
+* Dependencies: *GitHub API*
+* Workflow (who, and how): *GitHub API*
+* Inputs & validation: *GraphQL*
+
+---
+
+class: nord-dark, left, middle
+
 ### We need experiments like this
 
+* Security is part of every project, but security people can't be
 * Security automation
   * aimed at resolving the safety/speed tradeoff
-  * Security is part of every project, but security people can't be
+  * scales security to meet the need
 * Shipping shouldn't mean accepting a tonne of risk
 
 ---
