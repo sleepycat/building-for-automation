@@ -54,24 +54,38 @@ class: nord-dark, middle, left
 
 class: nord-dark, middle, left
 
-### Tracker's data gives certain answers
+### What we can make visible
 
-* Are TLS/DMARC settings for a domain "good"?
-* Are this/that group of domains "good"?
-* Are this/that group of domains trending towards "good"?
-* What is observably "good" now
+* Difference between domains TLS/DMARC settings and "good"?
+* Totals within/differences between groups of domains
+* Trends for domains/groups towards "good"
+* Where things stand now
 
 ---
 
 class: nord-dark, middle, left
 
-### We'd love to measure more
+### But there is so much more we want to make visible...
 
 ---
 
 class: nord-dark, middle, left
 
 ### Important security information exists at every layer
+
+* Platform
+* Infrastructure
+* Languages
+* Dependencies
+* Workflow (who, and how)
+* Application code
+* Inputs & validation
+
+---
+
+class: nord-dark, middle, left
+
+### Very little of this is visible from the outside
 
 * Platform
 * Infrastructure
@@ -784,11 +798,14 @@ class: nord-dark, middle, left
 
 ## Validation as data: GraphQL
 
+???
+Security has been telling devs to validate their inputs for decades now, but if doing so were as simple as it sounds security would largely be solved already.
+Released in 2015, a technology for to building APIs offered some new options for addressing this impasse. That technology is GraphQL.
 ---
 
 class: nord-dark, middle, left
 
-### A language for your API
+### GraphQL: A language for your API
 
 .eighty[![graphql](images/graphql.svg)]
 
@@ -806,7 +823,7 @@ class: nord-dark, middle, left
 
 class: nord-dark, middle, left
 
-### Being specific (via types) keeps invalid/malicious inputs out
+### Being specific keeps invalid/malicious inputs out
 
 .eighty[![https-everywhere](images/graphql-sin.png)]
 
@@ -824,7 +841,7 @@ class: nord-dark, middle, left
 
 class: nord-dark, middle, left
 
-### GraphQL describes itself (inputs and outputs) as data
+### You can ask GraphQL about what types are defined
 
 .eighty[![https-everywhere](images/schema-as-data.png)]
 
@@ -832,7 +849,7 @@ class: nord-dark, middle, left
 
 class: nord-dark, middle, left
 
-### Safe input handling is now auditable from the outside
+### GraphQL APIs make input handling auditable from the outside
 
 ```bash
 $ npx graphql-attack-surface https://pulse.alpha.canada.ca/graphql
@@ -857,6 +874,17 @@ class: nord-dark, center, middle, title
 
 ---
 
+class: nord-dark, left, middle
+
+### Data enabled automation
+
+* Reproducability: ~10 minute rebuild
+* Auditability: Git as governance
+* Security: Fewer credentials in fewer places, No config drift
+* Operations: better, safer, faster
+
+---
+
 class: nord-dark, middle, left
 
 ### Can we build Tracker so that it can been analyzed?
@@ -874,27 +902,15 @@ class: nord-dark, left, middle
 
 class: nord-dark, left, middle
 
-### Pursuing data benefited other areas
+### The ingredients for an automated ATO?
 
-* Reproducability: ~10 minute rebuild
-* Auditability: Git as governance
-* Security: Fewer credentials in fewer places (CI, assurance)
-* Observability: at runtime
-* Operations: better, safer, faster
-
----
-
-class: nord-dark, left, middle
-
-### The enabling conditions for automation
-### The ingredients for a new process
-
-* Platform: *Kubernetes*
-* Infrastructure: *Config Connector*
-* Languages: *GitHub API*
-* Dependencies: *GitHub API*
-* Workflow (who, and how): *GitHub API*
-* Inputs & validation: *GraphQL*
+* Kubernetes: 56 data types
+* Config Connector: 91 data types
+* 147 Lego blocks, that can build any system (we use ~35)
+* Each has ~2-10 properties relevant to answering our questions:
+  * Does it meet policy requirements?
+  * Is it configured securely?
+  * Does it follow best practice?
 
 ---
 
@@ -914,13 +930,48 @@ class: nord-dark, left, middle
 
 class: nord-dark, left, middle
 
-### We need experiments like this
+### We (GoC) need experiments like this
 
-* Security is part of every project, but security people can't be
-* Security automation
-  * scales security to meet the need
-  * aimed at resolving the safety/speed tradeoff
-* Shipping shouldn't mean accepting a tonne of risk
+* We need a lot of new services
+* Shipping shouldn't require accepting a tonne of risk
+
+---
+
+class: nord-dark, left, middle
+
+### We (Security) need experiments like this
+
+* Dev: 🐩🐩🐩🐩🐩🐩🐩🐩🐩🐩<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐩🐩🐩🐩🐩🐩🐩🐩🐩🐩<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐩🐩🐩🐩🐩🐩🐩🐩🐩🐩<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐩🐩🐩🐩🐩🐩🐩🐩🐩🐩<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐩🐩🐩🐩🐩🐩🐩🐩🐩🐩<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐩🐩🐩🐩🐩🐩🐩🐩🐩🐩<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐩🐩🐩🐩🐩🐩🐩🐩🐩🐩<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐩🐩🐩🐩🐩🐩🐩🐩🐩🐩<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐩🐩🐩🐩🐩🐩🐩🐩🐩🐩<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐩🐩🐩🐩🐩🐩🐩🐩🐩🐩<br/>
+* Ops: 🦆🦆🦆🦆🦆🦆🦆🦆🦆🦆
+* Sec: 🐈
+
+---
+
+class: nord-dark, left, middle
+
+### Making security visible empowers everyone to work on this problem
+
+* Dev: 🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈<br/>
+* Ops: 🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈
+* Sec: 🐈
 
 ---
 
@@ -935,19 +986,14 @@ class: nord-dark, middle, center
     <script src="js/remark.min.js"></script>
     <script>
       var slideshow = remark.create({
-        ratio: "16:9", // window ratio
-        // arta, ascetic, dark, default, far, github, googlecode, idea,
-        // ir-black, magula, monokai, rainbow, solarized-dark, solarized-light,
-        // sunburst, tomorrow, tomorrow-night-blue, tomorrow-night-bright,
-        // tomorrow-night, tomorrow-night-eighties, vs, zenburn.
+        ratio: "16:9",
         highlightStyle: "dark",
         highlightLines: true,
-        countIncrementalSlides: false, // whether the incremental content count as one page
-        //slideNumberFormat: "", // If this parameter is set to "", the page number is not displayed
+        countIncrementalSlides: false,
         navigation: {
-          scroll: false, // Page turning with mouse wheel is allowed
-          touch: true, // Is it allowed to scroll back and forth by clicking on the left or right side of the screen
-          click: false // Allow the mouse to click on the left or right side of the screen to turn back and forth
+          scroll: false,
+          touch: true,
+          click: false
         }
       });
 
